@@ -65,6 +65,165 @@ const parseCSV = (csvText) => {
     }
     return data;
 };
+
+// Transform Flat CSV Data to Hierarchical Structure
+const transformData = (flatData) => {
+    const companyMap = new Map();
+
+    flatData.forEach(row => {
+        if (!row.Name) return; // Skip empty rows
+
+        if (!companyMap.has(row.Name)) {
+            companyMap.set(row.Name, {
+                id: row.Name,
+                name: row.Name,
+                industry: row.Industry || 'Technology',
+                description: row.Description || 'No description available.',
+                offices: []
+            });
+        }
+
+        const lat = parseFloat(row.Lat);
+        const lng = parseFloat(row.Lng);
+
+        // Only add office if coordinates are valid
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const company = companyMap.get(row.Name);
+            company.offices.push({
+                city: row.City || 'Unknown City',
+                country: row.Country || 'Unknown Country',
+                lat: lat,
+                lng: lng,
+                type: row.Type || 'Office'
+            });
+        }
+    });
+
+    return Array.from(companyMap.values());
+};
+
+// Render Logic
+const renderApp = (filteredCompanies = companies) => {
+    const companyListEl = document.getElementById('company-list');
+    companyListEl.innerHTML = '';
+
+    // Clear existing markers
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    if (filteredCompanies.length === 0) {
+        companyListEl.innerHTML = '<p style="text-align:center; padding: 2rem; color: #888;">No companies found.</p>';
+        return;
+    }
+
+    filteredCompanies.forEach(company => {
+        // Create Sidebar Card
+        const card = document.createElement('div');
+        card.className = 'company-card';
+        card.innerHTML = `
+            <span class="industry">${company.industry}</span>
+            <h3>${company.name}</h3>
+            <p>${company.description}</p>
+        `;
+
+        card.addEventListener('click', () => {
+            // Highlight active card
+            document.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            // Zoom to HQ
+            const hq = company.offices.find(o => o.type === 'HQ') || company.offices[0];
+            if (hq) {
+                map.flyTo([hq.lat, hq.lng], 10, {
+                    duration: 2,
+                    easeLinearity: 0.25
+                });
+
+                // Open popup for HQ
+                const hqMarker = markers.find(m => m.options.title === `${company.name} - ${hq.city}`);
+                if (hqMarker) {
+                    setTimeout(() => hqMarker.openPopup(), 2000);
+                }
+            }
+        });
+
+        companyListEl.appendChild(card);
+
+        // Add Markers to Map
+        company.offices.forEach(office => {
+            const marker = L.marker([office.lat, office.lng], {
+                icon: createCustomIcon(office.type),
+                title: `${company.name} - ${office.city}`
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <h3>${company.name}</h3>
+                <p><strong>${office.city}, ${office.country}</strong></p>
+                <p>${office.type} Office</p>
+            `);
+
+            markers.push(marker);
+        });
+    });
+};
+
+// Filter Logic
+const searchInput = document.getElementById('search-input');
+const companyFilter = document.getElementById('company-filter');
+const countryFilter = document.getElementById('country-filter');
+
+const populateDropdowns = () => {
+    const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
+    // Get all countries from all offices
+    const allCountries = companies.flatMap(c => c.offices.map(o => o.country));
+    const uniqueCountries = [...new Set(allCountries)].sort();
+
+    if (companyFilter) {
+        companyFilter.innerHTML = '<option value="">All Companies</option>';
+        uniqueCompanies.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            companyFilter.appendChild(option);
+        });
+    }
+
+    if (countryFilter) {
+        countryFilter.innerHTML = '<option value="">All Countries</option>';
+        uniqueCountries.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countryFilter.appendChild(option);
+        });
+    }
+};
+
+const filterData = () => {
+    const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+    const selectedCompany = companyFilter ? companyFilter.value : '';
+    const selectedCountry = countryFilter ? countryFilter.value : '';
+
+    const filtered = companies.filter(company => {
+        const matchesSearch = company.name.toLowerCase().includes(searchText) ||
+            company.offices.some(o => o.country.toLowerCase().includes(searchText));
+
+        const matchesCompany = selectedCompany ? company.name === selectedCompany : true;
+
+        const matchesCountry = selectedCountry ? company.offices.some(o => o.country === selectedCountry) : true;
+
+        return matchesSearch && matchesCompany && matchesCountry;
+    });
+
+    renderApp(filtered);
+};
+
+// Add Event Listeners
+if (searchInput) searchInput.addEventListener('input', filterData);
+if (companyFilter) companyFilter.addEventListener('change', filterData);
+if (countryFilter) countryFilter.addEventListener('change', filterData);
+
+// Initialize App
 const initApp = async () => {
     try {
         const response = await fetch(SHEET_URL);
@@ -73,6 +232,7 @@ const initApp = async () => {
         const flatData = parseCSV(csvText);
         companies = transformData(flatData);
 
+        populateDropdowns();
         renderApp();
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -81,6 +241,7 @@ const initApp = async () => {
         if (window.companies) {
             console.log('Falling back to static data');
             companies = window.companies;
+            populateDropdowns();
             renderApp();
         }
     }
