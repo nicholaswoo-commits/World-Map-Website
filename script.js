@@ -136,13 +136,13 @@ company.offices.forEach(office => {
 // Filter Logic
 const searchInput = document.getElementById('search-input');
 const companyFilter = document.getElementById('company-filter');
-const countryFilter = document.getElementById('country-filter');
+const cityFilter = document.getElementById('city-filter');
 
 const populateDropdowns = () => {
     const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
-    // Get all countries from all offices
-    const allCountries = companies.flatMap(c => c.offices.map(o => o.country));
-    const uniqueCountries = [...new Set(allCountries)].sort();
+    // Get all cities from all offices
+    const allCities = companies.flatMap(c => c.offices.map(o => o.city));
+    const uniqueCities = [...new Set(allCities)].sort();
 
     if (companyFilter) {
         companyFilter.innerHTML = '<option value="">All Companies</option>';
@@ -154,13 +154,13 @@ const populateDropdowns = () => {
         });
     }
 
-    if (countryFilter) {
-        countryFilter.innerHTML = '<option value="">All Countries</option>';
-        uniqueCountries.forEach(country => {
+    if (cityFilter) {
+        cityFilter.innerHTML = '<option value="">All Cities</option>';
+        uniqueCities.forEach(city => {
             const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country;
-            countryFilter.appendChild(option);
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
         });
     }
 };
@@ -168,17 +168,18 @@ const populateDropdowns = () => {
 const filterData = () => {
     const searchText = searchInput ? searchInput.value.toLowerCase() : '';
     const selectedCompany = companyFilter ? companyFilter.value : '';
-    const selectedCountry = countryFilter ? countryFilter.value : '';
+    const selectedCity = cityFilter ? cityFilter.value : '';
 
     const filtered = companies.filter(company => {
+        // Search matches Company Name OR City
         const matchesSearch = company.name.toLowerCase().includes(searchText) ||
-            company.offices.some(o => o.country.toLowerCase().includes(searchText));
+            company.offices.some(o => o.city.toLowerCase().includes(searchText));
 
         const matchesCompany = selectedCompany ? company.name === selectedCompany : true;
 
-        const matchesCountry = selectedCountry ? company.offices.some(o => o.country === selectedCountry) : true;
+        const matchesCity = selectedCity ? company.offices.some(o => o.city === selectedCity) : true;
 
-        return matchesSearch && matchesCompany && matchesCountry;
+        return matchesSearch && matchesCompany && matchesCity;
     });
 
     renderApp(filtered);
@@ -187,7 +188,7 @@ const filterData = () => {
 // Add Event Listeners
 if (searchInput) searchInput.addEventListener('input', filterData);
 if (companyFilter) companyFilter.addEventListener('change', filterData);
-if (countryFilter) countryFilter.addEventListener('change', filterData);
+if (cityFilter) cityFilter.addEventListener('change', filterData);
 
 // Initialize App
 const initApp = async () => {
