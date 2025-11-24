@@ -111,59 +111,25 @@ const renderApp = (filteredCompanies = companies) => {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
-    if (filteredCompanies.length === 0) {
-        companyListEl.innerHTML = '<p style="text-align:center; padding: 2rem; color: #888;">No companies found.</p>';
-        return;
-    }
+});
 
-    filteredCompanies.forEach(company => {
-        // Create Sidebar Card
-        const card = document.createElement('div');
-        card.className = 'company-card';
-        card.innerHTML = `
-            <span class="industry">${company.industry}</span>
-            <h3>${company.name}</h3>
-            <p>${company.description}</p>
-        `;
+companyListEl.appendChild(card);
 
-        card.addEventListener('click', () => {
-            // Highlight active card
-            document.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
+// Add Markers to Map
+company.offices.forEach(office => {
+    const marker = L.marker([office.lat, office.lng], {
+        icon: createCustomIcon(office.type),
+        title: `${company.name} - ${office.city}`
+    }).addTo(map);
 
-            // Zoom to HQ
-            const hq = company.offices.find(o => o.type === 'HQ') || company.offices[0];
-            if (hq) {
-                map.flyTo([hq.lat, hq.lng], 10, {
-                    duration: 2,
-                    easeLinearity: 0.25
-                });
-
-                // Open popup for HQ
-                const hqMarker = markers.find(m => m.options.title === `${company.name} - ${hq.city}`);
-                if (hqMarker) {
-                    setTimeout(() => hqMarker.openPopup(), 2000);
-                }
-            }
-        });
-
-        companyListEl.appendChild(card);
-
-        // Add Markers to Map
-        company.offices.forEach(office => {
-            const marker = L.marker([office.lat, office.lng], {
-                icon: createCustomIcon(office.type),
-                title: `${company.name} - ${office.city}`
-            }).addTo(map);
-
-            marker.bindPopup(`
+    marker.bindPopup(`
                 <h3>${company.name}</h3>
                 <p><strong>${office.city}, ${office.country}</strong></p>
                 <p>${office.type} Office</p>
             `);
 
-            markers.push(marker);
-        });
+    markers.push(marker);
+});
     });
 };
 

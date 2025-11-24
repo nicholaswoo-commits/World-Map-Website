@@ -94,35 +94,6 @@ body {
 }
 
 .company-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--accent-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 240, 255, 0.1);
-}
-
-.company-card.active {
-    background: rgba(0, 240, 255, 0.1);
-    border-color: var(--accent-primary);
-}
-
-.company-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-primary);
-}
-
-.company-card .industry {
-    font-size: 0.75rem;
-    color: var(--accent-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.company-card p {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
     line-height: 1.4;
 }
 
