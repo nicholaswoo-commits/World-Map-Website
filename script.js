@@ -174,6 +174,94 @@ const renderApp = (filteredCompanies = companies) => {
 };
 
 // Filter Logic
+const searchInput = document.getElementById('search-input');
+const companyFilter = document.getElementById('company-filter');
+const cityFilter = document.getElementById('city-filter');
+
+const populateDropdowns = () => {
+    const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
+
+    // Group cities by country
+    const citiesByCountry = {};
+    companies.forEach(company => {
+        company.offices.forEach(office => {
+            if (!citiesByCountry[office.country]) {
+                citiesByCountry[office.country] = new Set();
+            }
+            citiesByCountry[office.country].add(office.city);
+        });
+    });
+
+    // Sort countries
+    const sortedCountries = Object.keys(citiesByCountry).sort();
+
+    if (companyFilter) {
+        companyFilter.innerHTML = '<option value="">All Companies</option>';
+        uniqueCompanies.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            companyFilter.appendChild(option);
+        });
+    }
+
+    if (cityFilter) {
+        cityFilter.innerHTML = '<option value="">All Locations</option>';
+        sortedCountries.forEach(country => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = country;
+
+            // Add option to select the entire country
+            const countryOption = document.createElement('option');
+            countryOption.value = `country:${country}`;
+            countryOption.textContent = `All ${country} Cities`;
+            optgroup.appendChild(countryOption);
+
+            // Sort cities within country
+            const sortedCities = [...citiesByCountry[country]].sort();
+
+            sortedCities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = `city:${city}`;
+                option.textContent = city;
+                optgroup.appendChild(option);
+            });
+
+            cityFilter.appendChild(optgroup);
+        });
+    }
+};
+
+const filterData = () => {
+    const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+    const selectedCompany = companyFilter ? companyFilter.value : '';
+    const selectedLocation = cityFilter ? cityFilter.value : '';
+
+    const filtered = companies.filter(company => {
+        // Search matches Company Name OR City
+        const matchesSearch = company.name.toLowerCase().includes(searchText) ||
+            company.offices.some(o => o.city.toLowerCase().includes(searchText));
+
+        const matchesCompany = selectedCompany ? company.name === selectedCompany : true;
+
+        let matchesLocation = true;
+        if (selectedLocation) {
+            if (selectedLocation.startsWith('country:')) {
+                const country = selectedLocation.replace('country:', '');
+                matchesLocation = company.offices.some(o => o.country === country);
+            } else if (selectedLocation.startsWith('city:')) {
+                const city = selectedLocation.replace('city:', '');
+                matchesLocation = company.offices.some(o => o.city === city);
+            }
+        }
+
+        return matchesSearch && matchesCompany && matchesLocation;
+    });
+
+    renderApp(filtered);
+};
+
+// Add Event Listeners
 if (searchInput) searchInput.addEventListener('input', filterData);
 if (companyFilter) companyFilter.addEventListener('change', filterData);
 if (cityFilter) cityFilter.addEventListener('change', filterData);
