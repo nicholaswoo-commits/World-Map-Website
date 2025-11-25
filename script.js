@@ -180,9 +180,20 @@ const cityFilter = document.getElementById('city-filter');
 
 const populateDropdowns = () => {
     const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
-    // Get all cities from all offices
-    const allCities = companies.flatMap(c => c.offices.map(o => o.city));
-    const uniqueCities = [...new Set(allCities)].sort();
+
+    // Group cities by country
+    const citiesByCountry = {};
+    companies.forEach(company => {
+        company.offices.forEach(office => {
+            if (!citiesByCountry[office.country]) {
+                citiesByCountry[office.country] = new Set();
+            }
+            citiesByCountry[office.country].add(office.city);
+        });
+    });
+
+    // Sort countries
+    const sortedCountries = Object.keys(citiesByCountry).sort();
 
     if (companyFilter) {
         companyFilter.innerHTML = '<option value="">All Companies</option>';
@@ -196,11 +207,21 @@ const populateDropdowns = () => {
 
     if (cityFilter) {
         cityFilter.innerHTML = '<option value="">All Cities</option>';
-        uniqueCities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            cityFilter.appendChild(option);
+        sortedCountries.forEach(country => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = country;
+
+            // Sort cities within country
+            const sortedCities = [...citiesByCountry[country]].sort();
+
+            sortedCities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                optgroup.appendChild(option);
+            });
+
+            cityFilter.appendChild(optgroup);
         });
     }
 };
