@@ -24,29 +24,22 @@
 
 <body>
     <!-- Login Overlay -->
-    <div id="login-overlay" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Login</h2>
-            </div>
-            <div class="modal-body">
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" required>
-                    </div>
-                    <button type="submit" class="btn-primary">Login</button>
-                    <p id="login-error" class="error-message"></p>
-                </form>
-            </div>
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <h1>Login</h1>
+            <p>Enter your credentials to access the network.</p>
+            <form id="login-form">
+                <input type="email" id="email" class="login-input" placeholder="Email Address" required>
+                <input type="password" id="password" class="login-input" placeholder="Password" required>
+                <button type="submit" class="btn-primary login-btn">Access Network</button>
+                <p id="login-error" class="error-msg"></p>
+            </form>
         </div>
     </div>
 
+    <!-- Main Application -->
     <div id="app" class="hidden">
+        <!-- Sidebar (Left) -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <h1>Global Network</h1>
@@ -61,23 +54,28 @@
                             <option value="">All Companies</option>
                         </select>
                         <select id="city-filter" class="filter-select">
-                            <option value="">All Cities</option>
+                            <option value="">All Locations</option>
                         </select>
                     </div>
                 </div>
 
-                <button id="view-data-btn" class="btn-primary">View Dataset</button>
+                <button id="view-data-btn" class="btn-primary" style="margin-top: 1rem; width: 100%;">View
+                    Dataset</button>
             </div>
+
             <div id="company-list" class="company-list">
                 <!-- Companies will be injected here -->
             </div>
+
             <div class="sidebar-footer">
                 <p>&copy; 2025 Metallic Nova</p>
             </div>
         </div>
 
+        <!-- Map (Right) -->
         <div id="map"></div>
 
+        <!-- Decorative Gradient -->
         <div class="overlay-gradient"></div>
 
         <!-- Data Modal -->
