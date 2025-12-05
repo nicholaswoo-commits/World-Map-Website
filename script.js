@@ -268,25 +268,62 @@ if (cityFilter) cityFilter.addEventListener('change', filterData);
 
 // Initialize App
 const initApp = async () => {
+    // Check Auth State
+    auth.onAuthStateChanged(async (user) => {
+        const loginOverlay = document.getElementById('login-overlay');
+        const app = document.getElementById('app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+
+        if (user) {
+            // User is signed in
+            loginOverlay.classList.add('hidden');
+            app.classList.remove('hidden');
+
+            // Load Data from Firestore
+            await loadDataFromFirestore();
+
+            // Trigger resize to fix map rendering issues when unhidden
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+        } else {
+            // User is signed out
+            loginOverlay.classList.remove('hidden');
+            app.classList.add('hidden');
+        }
+
+        // Handle Login
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch((error) => {
+                        loginError.textContent = error.message;
+                    });
+            });
+        }
+    });
+};
+
+// Load Data from Firestore
+const loadDataFromFirestore = async () => {
     try {
-        const response = await fetch(SHEET_URL);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const csvText = await response.text();
-        const flatData = parseCSV(csvText);
-        companies = transformData(flatData);
+        const snapshot = await db.collection('companies').get();
+        companies = snapshot.docs.map(doc => doc.data());
+
+        if (companies.length === 0) {
+            console.log('No data in Firestore. Please run migration script.');
+            // Optional: Fallback to static data if needed, or keep empty
+        }
 
         populateDropdowns();
         renderApp();
     } catch (error) {
-        console.error('Error fetching data:', error);
-
-        // Fallback to static data if fetch fails
-        if (window.companies) {
-            console.log('Falling back to static data');
-            companies = window.companies;
-            populateDropdowns();
-            renderApp();
-        }
+        console.error('Error fetching data from Firestore:', error);
     }
 };
 
