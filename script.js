@@ -18,8 +18,8 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const dataTableBody = document.querySelector('#data-table tbody');
 
 // --- Firebase Authentication ---
-const auth = firebase.auth();
-const db = firebase.firestore();
+// auth and db are initialized in firebase-config.js
+
 
 // Check Auth State
 auth.onAuthStateChanged(user => {
