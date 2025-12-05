@@ -28,33 +28,6 @@ body {
 }
 
 #app {
-    display: flex;
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-
-/* Sidebar Styling */
-.sidebar {
-    width: 400px;
-    height: 100%;
-    background: var(--bg-panel);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    z-index: 1000;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: transform var(--transition-speed) ease;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-}
-
-.sidebar-header {
-    padding: 2rem;
-    border-bottom: 1px solid var(--border-color);
     background: linear-gradient(135deg, rgba(0, 240, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
