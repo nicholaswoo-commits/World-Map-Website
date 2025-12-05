@@ -86,64 +86,26 @@
             rel="stylesheet">
 
         <!-- Phosphor Icons -->
-        <script src="https://unpkg.com/@phosphor-icons/web"></script>
+        <input type="text" id="search-input" placeholder="Search companies or cities..." class="filter-input">
 
-        <!-- Custom Styles -->
-        <link rel="stylesheet" href="style.css">
-    </head>
-
-<body>
-    <!-- Login Overlay -->
-    <div id="login-overlay" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Login</h2>
-            </div>
-            <div class="modal-body">
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" required>
-                    </div>
-                    <button type="submit" class="btn-primary">Login</button>
-                    <p id="login-error" class="error-message"></p>
-                </form>
-            </div>
+        <div class="filter-row">
+            <select id="company-filter" class="filter-select">
+                <option value="">All Companies</option>
+            </select>
+            <select id="city-filter" class="filter-select">
+                <option value="">All Cities</option>
+            </select>
         </div>
-    </div>
+        </div>
 
-    <div id="app">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h1>Global Network</h1>
-                <p>Signed Terms Companies</p>
-
-                <div class="filter-container">
-                    <input type="text" id="search-input" placeholder="Search companies or cities..."
-                        class="filter-input">
-
-                    <div class="filter-row">
-                        <select id="company-filter" class="filter-select">
-                            <option value="">All Companies</option>
-                        </select>
-                        <select id="city-filter" class="filter-select">
-                            <option value="">All Cities</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button id="view-data-btn" class="btn-primary">View Dataset</button>
-            </div>
-            <div id="company-list" class="company-list">
-                <!-- Companies will be injected here -->
-            </div>
-            <div class="sidebar-footer">
-                <p>&copy; 2025 Metallic Nova</p>
-            </div>
+        <button id="view-data-btn" class="btn-primary">View Dataset</button>
+        </div>
+        <div id="company-list" class="company-list">
+            <!-- Companies will be injected here -->
+        </div>
+        <div class="sidebar-footer">
+            <p>&copy; 2025 Metallic Nova</p>
+        </div>
         </div>
 
         <div id="map"></div>
@@ -175,35 +137,35 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!DOCTYPE html>
-    <html lang="en">
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <!DOCTYPE html>
+        <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Global Presence | Premium Network</title>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Global Presence | Premium Network</title>
 
-        <!-- Leaflet CSS -->
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+            <!-- Leaflet CSS -->
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+                integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
-        <!-- Google Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet">
+            <!-- Google Fonts -->
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+                rel="stylesheet">
 
-        <!-- Phosphor Icons -->
-        <script src="https://unpkg.com/@phosphor-icons/web"></script>
+            <!-- Phosphor Icons -->
+            <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-        <!-- Custom Styles -->
-        <link rel="stylesheet" href="style.css">
-    </head>
+            <!-- Custom Styles -->
+            <link rel="stylesheet" href="style.css">
+        </head>
 
     <body>
         <!-- Login Overlay -->
