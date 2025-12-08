@@ -18,6 +18,14 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const dataTableBody = document.querySelector('#data-table tbody');
 
+// Summary Box Elements
+const summaryBox = document.getElementById('summary-box');
+const closeSummaryBtn = document.getElementById('close-summary-btn');
+const summaryName = document.getElementById('summary-name');
+const summaryIndustry = document.getElementById('summary-industry');
+const summaryDesc = document.getElementById('summary-desc');
+const summaryStats = document.getElementById('summary-stats');
+
 // --- Firebase Authentication ---
 // auth and db are initialized in firebase-config.js
 
@@ -59,7 +67,7 @@ logoutBtn.addEventListener('click', () => {
 
 // --- Application Logic ---
 
-const initApp = async () => {
+async function initApp() {
     // Initialize Map
     if (!map) {
         map = L.map('map').setView([20, 0], 2);
@@ -80,7 +88,7 @@ const initApp = async () => {
 
         if (companies.length === 0) {
             console.warn('No companies found in Firestore. Did you run the migration?');
-            alert('No data found! Run window.migrateData() in console.');
+            // alert('No data found! Run window.migrateData() in console.');
         }
 
         populateDropdowns();
@@ -89,9 +97,9 @@ const initApp = async () => {
         console.error("Error fetching companies:", error);
         alert('Error fetching data: ' + error.message);
     }
-};
+}
 
-const populateDropdowns = () => {
+function populateDropdowns() {
     // Unique Companies
     const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
 
@@ -140,15 +148,15 @@ const populateDropdowns = () => {
 
         cityFilter.appendChild(optgroup);
     });
-};
+}
 
-const renderApp = (data) => {
+function renderApp(data) {
     renderList(data);
     renderMap(data);
     renderTable(data);
-};
+}
 
-const renderList = (data) => {
+function renderList(data) {
     companyList.innerHTML = '';
     data.forEach(company => {
         const card = document.createElement('div');
@@ -182,9 +190,9 @@ const renderList = (data) => {
 
         companyList.appendChild(card);
     });
-};
+}
 
-const renderMap = (data) => {
+function renderMap(data) {
     // Clear existing markers
     markers.forEach(m => map.removeLayer(m.marker));
     markers = [];
@@ -208,9 +216,9 @@ const renderMap = (data) => {
             markers.push({ marker, company: company.name });
         });
     });
-};
+}
 
-const updateSummaryBox = (company) => {
+function updateSummaryBox(company) {
     summaryName.textContent = company.name;
     summaryIndustry.textContent = company.industry;
     summaryDesc.textContent = company.description || "No description available for this company.";
@@ -231,14 +239,14 @@ const updateSummaryBox = (company) => {
     `;
 
     summaryBox.classList.remove('hidden');
-};
+}
 
 // Close Summary Box
 closeSummaryBtn.addEventListener('click', () => {
     summaryBox.classList.add('hidden');
 });
 
-const renderTable = (data) => {
+function renderTable(data) {
     dataTableBody.innerHTML = '';
     data.forEach(company => {
         company.offices.forEach(office => {
@@ -253,10 +261,10 @@ const renderTable = (data) => {
             dataTableBody.appendChild(row);
         });
     });
-};
+}
 
 // --- Filtering Logic ---
-const filterData = () => {
+function filterData() {
     const searchText = searchInput.value.toLowerCase();
     const selectedCompany = companyFilter.value;
     const selectedLocation = cityFilter.value;
@@ -285,7 +293,7 @@ const filterData = () => {
     });
 
     renderApp(filtered);
-};
+}
 
 // Event Listeners for Filters
 searchInput.addEventListener('input', filterData);
