@@ -314,7 +314,6 @@ function updateSummaryBox(company) {
     const officeCount = company.offices.length;
     const countries = new Set(company.offices.map(o => o.country)).size;
 
-    summaryStats.innerHTML = `
         <div class="stat-item">
             <h4>Offices</h4>
             <p>${officeCount}</p>
@@ -322,6 +321,12 @@ function updateSummaryBox(company) {
         <div class="stat-item">
             <h4>Global Reach</h4>
             <p>${countries} Found</p>
+        </div>
+        <div class="stat-item">
+            <h4>Signed Terms</h4>
+            <p style="color: ${company.signedTerms ? '#2ecc71' : '#ff4d4d'}">
+                ${company.signedTerms ? 'Yes' : 'No'}
+            </p>
         </div>
     `;
 
@@ -370,12 +375,12 @@ function renderTable(data) {
         company.offices.forEach(office => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${company.name}</td>
+        < td > ${ company.name }</td >
                 <td>${company.industry}</td>
                 <td>${office.city}</td>
                 <td>${office.country}</td>
                 <td>${office.type}</td>
-            `;
+    `;
             dataTableBody.appendChild(row);
         });
     });
