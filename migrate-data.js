@@ -61,6 +61,10 @@ const migrateData = async (manualCsvText) => {
                     lng: lng,
                     type: row.Type || 'Office'
                 });
+
+                // Update company-level fields if present in any row
+                if (row.Website) company.website = row.Website;
+                if (row.LinkedIn) company.linkedin = row.LinkedIn;
             }
         });
         return Array.from(companyMap.values());

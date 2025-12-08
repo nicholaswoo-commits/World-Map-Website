@@ -25,6 +25,8 @@ const summaryName = document.getElementById('summary-name');
 const summaryIndustry = document.getElementById('summary-industry');
 const summaryDesc = document.getElementById('summary-desc');
 const summaryStats = document.getElementById('summary-stats');
+const summaryWebsite = document.getElementById('summary-website');
+const summaryLinkedin = document.getElementById('summary-linkedin');
 
 // --- Firebase Authentication ---
 // auth and db are initialized in firebase-config.js
@@ -237,6 +239,21 @@ function updateSummaryBox(company) {
             <p>${countries} Found</p>
         </div>
     `;
+
+    // Social Links
+    if (company.website) {
+        summaryWebsite.href = company.website;
+        summaryWebsite.classList.remove('hidden');
+    } else {
+        summaryWebsite.classList.add('hidden');
+    }
+
+    if (company.linkedin) {
+        summaryLinkedin.href = company.linkedin;
+        summaryLinkedin.classList.remove('hidden');
+    } else {
+        summaryLinkedin.classList.add('hidden');
+    }
 
     summaryBox.classList.remove('hidden');
 }

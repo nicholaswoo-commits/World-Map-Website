@@ -215,6 +215,36 @@ body {
     font-weight: 600;
 }
 
+.summary-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    transition: all var(--transition-speed);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-icon:hover {
+    background: var(--accent-primary);
+    color: var(--bg-dark);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+
 /* --- Map --- */
 #map {
     flex: 1;
