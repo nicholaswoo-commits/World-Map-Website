@@ -285,6 +285,27 @@ body {
     box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
 }
 
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--text-secondary);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+    transition: all var(--transition-speed);
+}
+
+.btn-secondary:hover {
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
+}
+
 /* --- Modal --- */
 .modal {
     position: fixed;

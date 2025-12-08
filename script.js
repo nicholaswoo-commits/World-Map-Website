@@ -15,6 +15,7 @@ const cityFilter = document.getElementById('city-filter');
 const viewDataBtn = document.getElementById('view-data-btn');
 const dataModal = document.getElementById('data-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
+const logoutBtn = document.getElementById('logout-btn');
 const dataTableBody = document.querySelector('#data-table tbody');
 
 // --- Firebase Authentication ---
@@ -49,6 +50,11 @@ loginForm.addEventListener('submit', (e) => {
             console.error('Login Error:', error);
             loginError.textContent = 'Invalid email or password.';
         });
+});
+
+// Handle Logout
+logoutBtn.addEventListener('click', () => {
+    auth.signOut();
 });
 
 // --- Application Logic ---
