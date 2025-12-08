@@ -59,7 +59,8 @@ const migrateData = async (manualCsvText) => {
                     country: row.Country || 'Unknown Country',
                     lat: lat,
                     lng: lng,
-                    type: row.Type || 'Office'
+                    type: row.Type || 'Office',
+                    signedTerms: row['Signed Terms'] ? row['Signed Terms'].trim().toLowerCase() === 'yes' : false
                 });
 
                 // Update company-level fields if present in any row
