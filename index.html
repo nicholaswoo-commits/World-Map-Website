@@ -46,16 +46,21 @@
                 <p>Signed Terms Companies</p>
 
                 <div class="filter-container">
-                    <input type="text" id="search-input" placeholder="Search companies or cities..."
-                        class="filter-input">
+                    <button id="back-to-list-btn" class="btn-secondary hidden"
+                        style="width: 100%; margin-bottom: 0.5rem;">&larr; Back to All Companies</button>
 
-                    <div class="filter-row">
-                        <select id="company-filter" class="filter-select">
-                            <option value="">All Companies</option>
-                        </select>
-                        <select id="city-filter" class="filter-select">
-                            <option value="">All Locations</option>
-                        </select>
+                    <div id="main-filters">
+                        <input type="text" id="search-input" placeholder="Search companies or cities..."
+                            class="filter-input">
+
+                        <div class="filter-row">
+                            <select id="company-filter" class="filter-select">
+                                <option value="">All Companies</option>
+                            </select>
+                            <select id="city-filter" class="filter-select">
+                                <option value="">All Locations</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -65,6 +70,10 @@
 
             <div id="company-list" class="company-list">
                 <!-- Companies will be injected here -->
+            </div>
+
+            <div id="office-list" class="company-list hidden">
+                <!-- Offices for selected company will be injected here -->
             </div>
 
             <div class="sidebar-footer">
