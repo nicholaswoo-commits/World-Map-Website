@@ -176,6 +176,8 @@ const renderList = (data) => {
                     }
                 });
             }
+            // Show Summary
+            updateSummaryBox(company);
         });
 
         companyList.appendChild(card);
@@ -197,11 +199,44 @@ const renderMap = (data) => {
                     <p><strong>Type:</strong> ${office.type}</p>
                 `);
 
+            // Add click listener to marker
+            marker.on('click', () => {
+                updateSummaryBox(company);
+            });
+
             marker.addTo(map);
             markers.push({ marker, company: company.name });
         });
     });
 };
+
+const updateSummaryBox = (company) => {
+    summaryName.textContent = company.name;
+    summaryIndustry.textContent = company.industry;
+    summaryDesc.textContent = company.description || "No description available for this company.";
+
+    // Calculate stats
+    const officeCount = company.offices.length;
+    const countries = new Set(company.offices.map(o => o.country)).size;
+
+    summaryStats.innerHTML = `
+        <div class="stat-item">
+            <h4>Offices</h4>
+            <p>${officeCount}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Global Reach</h4>
+            <p>${countries} Found</p>
+        </div>
+    `;
+
+    summaryBox.classList.remove('hidden');
+};
+
+// Close Summary Box
+closeSummaryBtn.addEventListener('click', () => {
+    summaryBox.classList.add('hidden');
+});
 
 const renderTable = (data) => {
     dataTableBody.innerHTML = '';
