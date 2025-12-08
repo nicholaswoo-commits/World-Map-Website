@@ -242,6 +242,7 @@ function enterCompanyMode(company) {
                 <h3>${company.name} (OFFICE)</h3>
                 <p><strong>City:</strong> ${office.city}</p>
                 <p><strong>Type:</strong> ${office.type}</p>
+                <p><strong>Signed Terms:</strong> <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}">${office.signedTerms ? 'Yes' : 'No'}</span></p>
             `);
 
         marker.addTo(map);
@@ -288,12 +289,17 @@ function renderOfficeList(company) {
     company.offices.forEach(office => {
         const card = document.createElement('div');
         card.className = 'company-card'; // Reuse style
-        card.style.borderColor = 'var(--accent-secondary)';
+        card.style.borderColor = office.signedTerms ? '#2ecc71' : '#ff4d4d'; // Color border
 
         card.innerHTML = `
             <h3>${office.city}</h3>
             <p>${office.country}</p>
-            <span class="card-tag">${office.type}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                <span class="card-tag">${office.type}</span>
+                <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}; font-weight:600; font-size:0.8rem;">
+                    ${office.signedTerms ? 'Signed' : 'Not Signed'}
+                </span>
+            </div>
         `;
 
         card.addEventListener('click', () => {
@@ -314,6 +320,18 @@ function updateSummaryBox(company) {
     const officeCount = company.offices.length;
     const countries = new Set(company.offices.map(o => o.country)).size;
 
+    // Signed Terms Logic
+    const signedCount = company.offices.filter(o => o.signedTerms).length;
+    let signedStatusHTML = '';
+
+    if (signedCount === officeCount) {
+        signedStatusHTML = '<span style="color:#2ecc71">Yes (All)</span>';
+    } else if (signedCount === 0) {
+        signedStatusHTML = '<span style="color:#ff4d4d">No</span>';
+    } else {
+        signedStatusHTML = `<span style="color:#f1c40f">Mixed (${signedCount}/${officeCount})</span>`;
+    }
+
     summaryStats.innerHTML = `
         <div class="stat-item">
             <h4>Offices</h4>
@@ -325,9 +343,7 @@ function updateSummaryBox(company) {
         </div>
         <div class="stat-item">
             <h4>Signed Terms</h4>
-            <p style="color: ${company.signedTerms ? '#2ecc71' : '#ff4d4d'}">
-                ${company.signedTerms ? 'Yes' : 'No'}
-            </p>
+            <p>${signedStatusHTML}</p>
         </div>
     `;
 
