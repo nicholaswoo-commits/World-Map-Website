@@ -182,7 +182,7 @@ function renderList(data) {
         card.className = 'company-card';
 
         // Create tags for locations
-        const tags = company.offices.slice(0, 2).map(o => `<span class="card-tag">${o.city}</span>`).join('');
+        const tags = company.offices.map(o => `<span class="card-tag">${o.city}</span>`).join('');
 
         card.innerHTML = `
             <h3>${company.name}</h3>
