@@ -2,6 +2,8 @@
 let map;
 let markers = [];
 let companies = []; // Will store data from Firestore
+let currentMode = 'ALL'; // 'ALL' or 'SINGLE'
+let currentCompany = null;
 
 // DOM Elements
 const loginOverlay = document.getElementById('login-overlay');
@@ -9,6 +11,10 @@ const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 const appDiv = document.getElementById('app');
 const companyList = document.getElementById('company-list');
+const officeList = document.getElementById('office-list');
+const backToListBtn = document.getElementById('back-to-list-btn');
+const mainFilters = document.getElementById('main-filters');
+
 const searchInput = document.getElementById('search-input');
 const companyFilter = document.getElementById('company-filter');
 const cityFilter = document.getElementById('city-filter');
@@ -22,6 +28,7 @@ const dataTableBody = document.querySelector('#data-table tbody');
 const summaryBox = document.getElementById('summary-box');
 const closeSummaryBtn = document.getElementById('close-summary-btn');
 const summaryName = document.getElementById('summary-name');
+const summaryCompanySelect = document.getElementById('summary-company-select');
 const summaryIndustry = document.getElementById('summary-industry');
 const summaryDesc = document.getElementById('summary-desc');
 const summaryStats = document.getElementById('summary-stats');
@@ -90,7 +97,6 @@ async function initApp() {
 
         if (companies.length === 0) {
             console.warn('No companies found in Firestore. Did you run the migration?');
-            // alert('No data found! Run window.migrateData() in console.');
         }
 
         populateDropdowns();
@@ -125,6 +131,15 @@ function populateDropdowns() {
         companyFilter.appendChild(option);
     });
 
+    // Populate Summary Dropdown
+    summaryCompanySelect.innerHTML = '<option value="">Switch Company...</option>';
+    uniqueCompanies.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        summaryCompanySelect.appendChild(option);
+    });
+
     // Populate City Filter (Grouped)
     cityFilter.innerHTML = '<option value="">All Locations</option>';
     const sortedCountries = Object.keys(citiesByCountry).sort();
@@ -153,8 +168,10 @@ function populateDropdowns() {
 }
 
 function renderApp(data) {
-    renderList(data);
-    renderMap(data);
+    if (currentMode === 'ALL') {
+        renderList(data);
+        renderMap(data);
+    }
     renderTable(data);
 }
 
@@ -165,7 +182,6 @@ function renderList(data) {
         card.className = 'company-card';
 
         // Create tags for locations
-        const locations = company.offices.map(o => `${o.city}, ${o.country}`).join(' | ');
         const tags = company.offices.slice(0, 2).map(o => `<span class="card-tag">${o.city}</span>`).join('');
 
         card.innerHTML = `
@@ -175,19 +191,7 @@ function renderList(data) {
         `;
 
         card.addEventListener('click', () => {
-            // Zoom to first office
-            if (company.offices.length > 0) {
-                const office = company.offices[0];
-                map.setView([office.lat, office.lng], 10);
-                // Find and open popup
-                markers.forEach(m => {
-                    if (m.company === company.name) {
-                        m.marker.openPopup();
-                    }
-                });
-            }
-            // Show Summary
-            updateSummaryBox(company);
+            enterCompanyMode(company);
         });
 
         companyList.appendChild(card);
@@ -211,7 +215,7 @@ function renderMap(data) {
 
             // Add click listener to marker
             marker.on('click', () => {
-                updateSummaryBox(company);
+                enterCompanyMode(company);
             });
 
             marker.addTo(map);
@@ -220,10 +224,91 @@ function renderMap(data) {
     });
 }
 
+// --- Single Company Mode Functions ---
+
+function enterCompanyMode(company) {
+    currentMode = 'SINGLE';
+    currentCompany = company;
+
+    // 1. Update Map: Show only this company's offices
+    markers.forEach(m => map.removeLayer(m.marker));
+    markers = [];
+
+    const bounds = [];
+
+    company.offices.forEach(office => {
+        const marker = L.marker([office.lat, office.lng])
+            .bindPopup(`
+                <h3>${company.name} (OFFICE)</h3>
+                <p><strong>City:</strong> ${office.city}</p>
+                <p><strong>Type:</strong> ${office.type}</p>
+            `);
+
+        marker.addTo(map);
+        markers.push({ marker, company: company.name });
+        bounds.push([office.lat, office.lng]);
+    });
+
+    if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+    }
+
+    // 2. Update Sidebar: Show Office List
+    renderOfficeList(company);
+    companyList.classList.add('hidden');
+    officeList.classList.remove('hidden');
+    backToListBtn.classList.remove('hidden');
+    mainFilters.classList.add('hidden');
+
+    // 3. Show Summary Box
+    updateSummaryBox(company);
+}
+
+function exitCompanyMode() {
+    currentMode = 'ALL';
+    currentCompany = null;
+
+    // 1. Reset Map
+    renderMap(companies);
+    map.setView([20, 0], 2); // Reset view
+
+    // 2. Reset Sidebar
+    companyList.classList.remove('hidden');
+    officeList.classList.add('hidden');
+    backToListBtn.classList.add('hidden');
+    mainFilters.classList.remove('hidden');
+
+    // 3. Hide Summary Box
+    summaryBox.classList.add('hidden');
+}
+
+function renderOfficeList(company) {
+    officeList.innerHTML = `<h3 style="margin-bottom:1rem; color:var(--text-secondary);">Offices for ${company.name}</h3>`;
+
+    company.offices.forEach(office => {
+        const card = document.createElement('div');
+        card.className = 'company-card'; // Reuse style
+        card.style.borderColor = 'var(--accent-secondary)';
+
+        card.innerHTML = `
+            <h3>${office.city}</h3>
+            <p>${office.country}</p>
+            <span class="card-tag">${office.type}</span>
+        `;
+
+        card.addEventListener('click', () => {
+            map.setView([office.lat, office.lng], 12);
+        });
+
+        officeList.appendChild(card);
+    });
+}
+
 function updateSummaryBox(company) {
     summaryName.textContent = company.name;
     summaryIndustry.textContent = company.industry;
     summaryDesc.textContent = company.description || "No description available for this company.";
+    summaryCompanySelect.value = company.name; // Sync dropdown
 
     // Calculate stats
     const officeCount = company.offices.length;
@@ -258,6 +343,22 @@ function updateSummaryBox(company) {
     summaryBox.classList.remove('hidden');
 }
 
+// --- Event Listeners ---
+
+backToListBtn.addEventListener('click', exitCompanyMode);
+
+summaryCompanySelect.addEventListener('change', (e) => {
+    const selectedName = e.target.value;
+    if (selectedName) {
+        const company = companies.find(c => c.name === selectedName);
+        if (company) {
+            enterCompanyMode(company);
+        }
+    } else {
+        exitCompanyMode(); // "Switch Company..." selected
+    }
+});
+
 // Close Summary Box
 closeSummaryBtn.addEventListener('click', () => {
     summaryBox.classList.add('hidden');
@@ -282,6 +383,9 @@ function renderTable(data) {
 
 // --- Filtering Logic ---
 function filterData() {
+    // Only allow filtering in ALL mode
+    if (currentMode !== 'ALL') return;
+
     const searchText = searchInput.value.toLowerCase();
     const selectedCompany = companyFilter.value;
     const selectedLocation = cityFilter.value;
