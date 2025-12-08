@@ -60,180 +60,208 @@ const initApp = async () => {
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+    }
 
-            // Group cities by country
-            const citiesByCountry = {};
-            companies.forEach(company => {
-                company.offices.forEach(office => {
-                    if (!citiesByCountry[office.country]) {
-                        citiesByCountry[office.country] = new Set();
-                    }
-                    citiesByCountry[office.country].add(office.city);
-                });
-            });
+    // Fetch Data from Firestore
+    try {
+        console.log('Fetching companies from Firestore...');
+        const snapshot = await db.collection('companies').get();
+        companies = snapshot.docs.map(doc => doc.data());
+        window.companies = companies; // Expose for debugging
+        console.log('Loaded companies:', companies.length);
 
-            // Populate Company Filter
-            companyFilter.innerHTML = '<option value="">All Companies</option>';
-            uniqueCompanies.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                companyFilter.appendChild(option);
-            });
+        if (companies.length === 0) {
+            console.warn('No companies found in Firestore. Did you run the migration?');
+            alert('No data found! Run window.migrateData() in console.');
+        }
 
-            // Populate City Filter (Grouped)
-            cityFilter.innerHTML = '<option value="">All Locations</option>';
-            const sortedCountries = Object.keys(citiesByCountry).sort();
+        populateDropdowns();
+        renderApp(companies);
+    } catch (error) {
+        console.error("Error fetching companies:", error);
+        alert('Error fetching data: ' + error.message);
+    }
+};
 
-            sortedCountries.forEach(country => {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = country;
+const populateDropdowns = () => {
+    // Unique Companies
+    const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
 
-                // Option for entire country
-                const countryOption = document.createElement('option');
-                countryOption.value = `country:${country}`;
-                countryOption.textContent = `All ${country} Cities`;
-                optgroup.appendChild(countryOption);
+    // Group cities by country
+    const citiesByCountry = {};
+    companies.forEach(company => {
+        company.offices.forEach(office => {
+            if (!citiesByCountry[office.country]) {
+                citiesByCountry[office.country] = new Set();
+            }
+            citiesByCountry[office.country].add(office.city);
+        });
+    });
 
-                // Options for cities
-                const sortedCities = [...citiesByCountry[country]].sort();
-                sortedCities.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = `city:${city}`;
-                    option.textContent = city;
-                    optgroup.appendChild(option);
-                });
+    // Populate Company Filter
+    companyFilter.innerHTML = '<option value="">All Companies</option>';
+    uniqueCompanies.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        companyFilter.appendChild(option);
+    });
 
-                cityFilter.appendChild(optgroup);
-            });
-        };
+    // Populate City Filter (Grouped)
+    cityFilter.innerHTML = '<option value="">All Locations</option>';
+    const sortedCountries = Object.keys(citiesByCountry).sort();
 
-        const renderApp = (data) => {
-            renderList(data);
-            renderMap(data);
-            renderTable(data);
-        };
+    sortedCountries.forEach(country => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = country;
 
-        const renderList = (data) => {
-            companyList.innerHTML = '';
-            data.forEach(company => {
-                const card = document.createElement('div');
-                card.className = 'company-card';
+        // Option for entire country
+        const countryOption = document.createElement('option');
+        countryOption.value = `country:${country}`;
+        countryOption.textContent = `All ${country} Cities`;
+        optgroup.appendChild(countryOption);
 
-                // Create tags for locations
-                const locations = company.offices.map(o => `${o.city}, ${o.country}`).join(' | ');
-                const tags = company.offices.slice(0, 2).map(o => `<span class="card-tag">${o.city}</span>`).join('');
+        // Options for cities
+        const sortedCities = [...citiesByCountry[country]].sort();
+        sortedCities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = `city:${city}`;
+            option.textContent = city;
+            optgroup.appendChild(option);
+        });
 
-                card.innerHTML = `
+        cityFilter.appendChild(optgroup);
+    });
+};
+
+const renderApp = (data) => {
+    renderList(data);
+    renderMap(data);
+    renderTable(data);
+};
+
+const renderList = (data) => {
+    companyList.innerHTML = '';
+    data.forEach(company => {
+        const card = document.createElement('div');
+        card.className = 'company-card';
+
+        // Create tags for locations
+        const locations = company.offices.map(o => `${o.city}, ${o.country}`).join(' | ');
+        const tags = company.offices.slice(0, 2).map(o => `<span class="card-tag">${o.city}</span>`).join('');
+
+        card.innerHTML = `
             <h3>${company.name}</h3>
             <p>${company.industry}</p>
             <div style="margin-top:0.5rem;">${tags}</div>
         `;
 
-                card.addEventListener('click', () => {
-                    // Zoom to first office
-                    if (company.offices.length > 0) {
-                        const office = company.offices[0];
-                        map.setView([office.lat, office.lng], 10);
-                        // Find and open popup
-                        markers.forEach(m => {
-                            if (m.company === company.name) {
-                                m.marker.openPopup();
-                            }
-                        });
+        card.addEventListener('click', () => {
+            // Zoom to first office
+            if (company.offices.length > 0) {
+                const office = company.offices[0];
+                map.setView([office.lat, office.lng], 10);
+                // Find and open popup
+                markers.forEach(m => {
+                    if (m.company === company.name) {
+                        m.marker.openPopup();
                     }
                 });
+            }
+        });
 
-                companyList.appendChild(card);
-            });
-        };
+        companyList.appendChild(card);
+    });
+};
 
-        const renderMap = (data) => {
-            // Clear existing markers
-            markers.forEach(m => map.removeLayer(m.marker));
-            markers = [];
+const renderMap = (data) => {
+    // Clear existing markers
+    markers.forEach(m => map.removeLayer(m.marker));
+    markers = [];
 
-            data.forEach(company => {
-                company.offices.forEach(office => {
-                    const marker = L.marker([office.lat, office.lng])
-                        .bindPopup(`
+    data.forEach(company => {
+        company.offices.forEach(office => {
+            const marker = L.marker([office.lat, office.lng])
+                .bindPopup(`
                     <h3>${company.name}</h3>
                     <p><strong>Industry:</strong> ${company.industry}</p>
                     <p><strong>Location:</strong> ${office.city}, ${office.country}</p>
                     <p><strong>Type:</strong> ${office.type}</p>
                 `);
 
-                    marker.addTo(map);
-                    markers.push({ marker, company: company.name });
-                });
-            });
-        };
+            marker.addTo(map);
+            markers.push({ marker, company: company.name });
+        });
+    });
+};
 
-        const renderTable = (data) => {
-            dataTableBody.innerHTML = '';
-            data.forEach(company => {
-                company.offices.forEach(office => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
+const renderTable = (data) => {
+    dataTableBody.innerHTML = '';
+    data.forEach(company => {
+        company.offices.forEach(office => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
                 <td>${company.name}</td>
                 <td>${company.industry}</td>
                 <td>${office.city}</td>
                 <td>${office.country}</td>
                 <td>${office.type}</td>
             `;
-                    dataTableBody.appendChild(row);
-                });
-            });
-        };
-
-        // --- Filtering Logic ---
-        const filterData = () => {
-            const searchText = searchInput.value.toLowerCase();
-            const selectedCompany = companyFilter.value;
-            const selectedLocation = cityFilter.value;
-
-            const filtered = companies.filter(company => {
-                // 1. Search Text (Name or City)
-                const matchesSearch = company.name.toLowerCase().includes(searchText) ||
-                    company.offices.some(o => o.city.toLowerCase().includes(searchText));
-
-                // 2. Company Dropdown
-                const matchesCompany = selectedCompany ? company.name === selectedCompany : true;
-
-                // 3. Location Dropdown (Country or City)
-                let matchesLocation = true;
-                if (selectedLocation) {
-                    if (selectedLocation.startsWith('country:')) {
-                        const country = selectedLocation.replace('country:', '');
-                        matchesLocation = company.offices.some(o => o.country === country);
-                    } else if (selectedLocation.startsWith('city:')) {
-                        const city = selectedLocation.replace('city:', '');
-                        matchesLocation = company.offices.some(o => o.city === city);
-                    }
-                }
-
-                return matchesSearch && matchesCompany && matchesLocation;
-            });
-
-            renderApp(filtered);
-        };
-
-        // Event Listeners for Filters
-        searchInput.addEventListener('input', filterData);
-        companyFilter.addEventListener('change', filterData);
-        cityFilter.addEventListener('change', filterData);
-
-        // --- Modal Logic ---
-        viewDataBtn.addEventListener('click', () => {
-            dataModal.classList.remove('hidden');
+            dataTableBody.appendChild(row);
         });
+    });
+};
 
-        closeModalBtn.addEventListener('click', () => {
-            dataModal.classList.add('hidden');
-        });
+// --- Filtering Logic ---
+const filterData = () => {
+    const searchText = searchInput.value.toLowerCase();
+    const selectedCompany = companyFilter.value;
+    const selectedLocation = cityFilter.value;
 
-        window.addEventListener('click', (e) => {
-            if (e.target === dataModal) {
-                dataModal.classList.add('hidden');
+    const filtered = companies.filter(company => {
+        // 1. Search Text (Name or City)
+        const matchesSearch = company.name.toLowerCase().includes(searchText) ||
+            company.offices.some(o => o.city.toLowerCase().includes(searchText));
+
+        // 2. Company Dropdown
+        const matchesCompany = selectedCompany ? company.name === selectedCompany : true;
+
+        // 3. Location Dropdown (Country or City)
+        let matchesLocation = true;
+        if (selectedLocation) {
+            if (selectedLocation.startsWith('country:')) {
+                const country = selectedLocation.replace('country:', '');
+                matchesLocation = company.offices.some(o => o.country === country);
+            } else if (selectedLocation.startsWith('city:')) {
+                const city = selectedLocation.replace('city:', '');
+                matchesLocation = company.offices.some(o => o.city === city);
             }
-        });
+        }
+
+        return matchesSearch && matchesCompany && matchesLocation;
+    });
+
+    renderApp(filtered);
+};
+
+// Event Listeners for Filters
+searchInput.addEventListener('input', filterData);
+companyFilter.addEventListener('change', filterData);
+cityFilter.addEventListener('change', filterData);
+
+// --- Modal Logic ---
+viewDataBtn.addEventListener('click', () => {
+    dataModal.classList.remove('hidden');
+});
+
+closeModalBtn.addEventListener('click', () => {
+    dataModal.classList.add('hidden');
+});
+
+window.addEventListener('click', (e) => {
+    if (e.target === dataModal) {
+        dataModal.classList.add('hidden');
+    }
+});
