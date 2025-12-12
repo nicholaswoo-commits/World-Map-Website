@@ -261,6 +261,14 @@ function enterCompanyMode(company) {
                     <p><strong>Signed Terms:</strong> <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}">${office.signedTerms ? 'Yes' : 'No'}</span></p>
                 `);
 
+            // Hover interactions
+            marker.on('mouseover', function (e) {
+                this.openPopup();
+            });
+            marker.on('mouseout', function (e) {
+                this.closePopup();
+            });
+
             marker.addTo(map);
             markers.push({ marker, company: company.name });
             bounds.push([office.lat, office.lng]);
@@ -308,10 +316,10 @@ function renderOfficeList(company) {
         card.className = 'company-card'; // Reuse style
         card.style.borderColor = office.signedTerms ? '#2ecc71' : '#ff4d4d'; // Color border
 
+        // Use Country as the main header since City is less relevant
         card.innerHTML = `
-            <h3>${office.city}</h3>
-            <p>${office.country}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+            <h3>${office.country}</h3>
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
                 <span class="card-tag">${office.type}</span>
                 <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}; font-weight:600; font-size:0.8rem;">
                     ${office.signedTerms ? 'Signed' : 'Not Signed'}
@@ -348,7 +356,14 @@ function updateSummaryBox(company) {
     } else if (signedCount === 0) {
         signedStatusHTML = '<span style="color:#ff4d4d">No</span>';
     } else {
-        signedStatusHTML = `<span style="color:#f1c40f">Mixed (${signedCount}/${officeCount})</span>`;
+        // Create breakdown list for Mixed state
+        const breakdown = company.offices.map(o =>
+            `<div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:2px;">
+                <span>${o.country}</span>
+                <span style="color:${o.signedTerms ? '#2ecc71' : '#ff4d4d'}">${o.signedTerms ? 'Yes' : 'No'}</span>
+            </div>`
+        ).join('');
+        signedStatusHTML = `<div style="display:flex; flex-direction:column; width:100%; gap:2px;">${breakdown}</div>`;
     }
 
     summaryStats.innerHTML = `
@@ -360,10 +375,11 @@ function updateSummaryBox(company) {
             <h4>Global Reach</h4>
             <p>${countries} Found</p>
         </div>
-         <div class="stat-item">
+        <div class="stat-item" style="flex-grow:1;">
             <h4>Signed Terms</h4>
-            <div style="display:flex; flex-direction:column; gap:2px;">
-                <p>${signedStatusHTML}</p>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                ${signedStatusHTML}
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); width:100%; margin:4px 0;">
                 <small style="color:var(--text-secondary); font-size:0.75rem;">${company.signedTermsPercentage ? 'Target: ' + company.signedTermsPercentage : ''}</small>
             </div>
         </div>
@@ -416,7 +432,7 @@ function renderTable(data) {
             row.innerHTML = `
                 <td>${company.name}</td>
                 <td>${company.industry}</td>
-                <td>${office.city}</td>
+                <td>${office.country}</td>
                 <td>${office.country}</td>
                 <td>${office.type}</td>
             `;
