@@ -64,7 +64,16 @@ const migrateData = async (manualCsvText) => {
         'China': { lat: 35.8617, lng: 104.1954 },
         'Germany': { lat: 51.1657, lng: 10.4515 },
         'Brazil': { lat: -14.2350, lng: -51.9253 },
-        'Mexico': { lat: 23.6345, lng: -102.5528 }
+        'Mexico': { lat: 23.6345, lng: -102.5528 },
+        'Spain': { lat: 40.4637, lng: -3.7492 },
+        'Italy': { lat: 41.8719, lng: 12.5674 },
+        'Greece': { lat: 39.0742, lng: 21.8243 },
+        'Belgium': { lat: 50.5039, lng: 4.4699 },
+        'Denmark': { lat: 56.2639, lng: 9.5018 },
+        'Sweden': { lat: 60.1282, lng: 18.6435 },
+        'Norway': { lat: 60.4720, lng: 8.4689 },
+        'Finland': { lat: 61.9241, lng: 25.7482 },
+        'Hong Kong': { lat: 22.3193, lng: 114.1694 }
     };
 
     const getJitteredCoords = (country) => {
