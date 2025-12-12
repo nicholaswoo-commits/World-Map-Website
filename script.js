@@ -348,23 +348,17 @@ function updateSummaryBox(company) {
     const countries = new Set(company.offices.map(o => o.country)).size;
 
     // Signed Terms Logic
-    const signedCount = company.offices.filter(o => o.signedTerms).length;
-    let signedStatusHTML = '';
+    // Create breakdown list for ALL states including percentage
+    const breakdown = company.offices.map(o => {
+        // Logic: If Signed=Yes -> Show stored %, If Signed=No -> Show 0%
+        const displayPercentage = o.signedTerms ? (o.signedTermsPercentage && o.signedTermsPercentage !== 'N/A' ? o.signedTermsPercentage : '100%') : '0%';
+        const color = o.signedTerms ? '#2ecc71' : '#ff4d4d'; // Green or Red
 
-    if (signedCount === officeCount) {
-        signedStatusHTML = '<span style="color:#2ecc71">Yes (All)</span>';
-    } else if (signedCount === 0) {
-        signedStatusHTML = '<span style="color:#ff4d4d">No</span>';
-    } else {
-        // Create breakdown list for Mixed state
-        const breakdown = company.offices.map(o =>
-            `<div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:2px;">
-                <span>${o.country}</span>
-                <span style="color:${o.signedTerms ? '#2ecc71' : '#ff4d4d'}">${o.signedTerms ? 'Yes' : 'No'}</span>
-            </div>`
-        ).join('');
-        signedStatusHTML = `<div style="display:flex; flex-direction:column; width:100%; gap:2px;">${breakdown}</div>`;
-    }
+        return `<div style="display:flex; justify-content:space-between; font-size:0.8rem; line-height:1.4;">
+            <span style="color:var(--text-secondary);">${o.country}</span>
+            <span style="color:${color}; font-weight:600;">${displayPercentage}</span>
+        </div>`;
+    }).join('');
 
     summaryStats.innerHTML = `
         <div class="stat-item">
@@ -377,10 +371,8 @@ function updateSummaryBox(company) {
         </div>
         <div class="stat-item" style="flex-grow:1;">
             <h4>Signed Terms</h4>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                ${signedStatusHTML}
-                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); width:100%; margin:4px 0;">
-                <small style="color:var(--text-secondary); font-size:0.75rem;">${company.signedTermsPercentage ? 'Target: ' + company.signedTermsPercentage : ''}</small>
+            <div style="display:flex; flex-direction:column; width:100%; gap:2px; margin-top:4px;">
+                ${breakdown}
             </div>
         </div>
     `;
