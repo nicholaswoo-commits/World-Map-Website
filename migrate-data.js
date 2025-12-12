@@ -119,13 +119,13 @@ const migrateData = async (manualCsvText) => {
                 lat: coords.lat,
                 lng: coords.lng, // Generated
                 type: row.Type || 'Office',
-                signedTerms: row['Signed Terms'] ? row['Signed Terms'].trim().toLowerCase() === 'yes' : false
+                signedTerms: row['Signed Terms'] ? row['Signed Terms'].trim().toLowerCase() === 'yes' : false,
+                signedTermsPercentage: row['Signed Terms Percentage'] || 'N/A'
             });
 
             // Update company-level fields if present in any row
             if (row.Website) company.website = row.Website;
             if (row.LinkedIn) company.linkedin = row.LinkedIn;
-            if (row['Signed Terms Percentage']) company.signedTermsPercentage = row['Signed Terms Percentage'];
         });
         return Array.from(companyMap.values());
     };
