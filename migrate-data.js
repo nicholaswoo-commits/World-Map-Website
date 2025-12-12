@@ -40,7 +40,11 @@ const migrateData = async (manualCsvText) => {
     // Country Center Coordinates (Approximate)
     const COUNTRY_COORDINATES = {
         'USA': { lat: 37.0902, lng: -95.7129 },
+        'United States': { lat: 37.0902, lng: -95.7129 }, // Alias
+        'US': { lat: 37.0902, lng: -95.7129 }, // Alias
         'UK': { lat: 55.3781, lng: -3.4360 },
+        'United Kingdom': { lat: 55.3781, lng: -3.4360 }, // Alias
+        'Great Britain': { lat: 55.3781, lng: -3.4360 }, // Alias
         'Singapore': { lat: 1.3521, lng: 103.8198 },
         'India': { lat: 20.5937, lng: 78.9629 },
         'Japan': { lat: 36.2048, lng: 138.2529 },
@@ -48,6 +52,7 @@ const migrateData = async (manualCsvText) => {
         'Korea': { lat: 35.9078, lng: 127.7669 },
         'Ireland': { lat: 53.1424, lng: -7.6921 },
         'Netherlands': { lat: 52.1326, lng: 5.2913 },
+        'The Netherlands': { lat: 52.1326, lng: 5.2913 }, // Alias
         'Israel': { lat: 31.0461, lng: 34.8516 },
         'Canada': { lat: 56.1304, lng: -106.3468 },
         'France': { lat: 46.2276, lng: 2.2137 },
@@ -63,7 +68,13 @@ const migrateData = async (manualCsvText) => {
     };
 
     const getJitteredCoords = (country) => {
-        const center = COUNTRY_COORDINATES[country] || { lat: 0, lng: 0 }; // Default to 0,0 if unknown
+        const center = COUNTRY_COORDINATES[country];
+
+        if (!center) {
+            console.warn(`WARNING: Country "${country}" not found in coordinate dictionary. Markers will default to 0,0.`);
+            return { lat: 0, lng: 0 };
+        }
+
         // Jitter by +/- 2-5 degrees to spread them out
         const jitterLat = (Math.random() - 0.5) * 4;
         const jitterLng = (Math.random() - 0.5) * 4;

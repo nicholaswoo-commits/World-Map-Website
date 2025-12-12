@@ -205,6 +205,12 @@ function renderMap(data) {
 
     data.forEach(company => {
         company.offices.forEach(office => {
+            // Check for valid coords before creating marker
+            if (office.lat === undefined || office.lng === undefined || isNaN(office.lat) || isNaN(office.lng)) {
+                console.warn(`Skipping invalid marker for ${company.name} in ${office.city}, ${office.country}`);
+                return;
+            }
+
             const marker = L.marker([office.lat, office.lng])
                 .bindPopup(`
                     <h3>${company.name}</h3>
@@ -237,17 +243,19 @@ function enterCompanyMode(company) {
     const bounds = [];
 
     company.offices.forEach(office => {
-        const marker = L.marker([office.lat, office.lng])
-            .bindPopup(`
-                <h3>${company.name} (OFFICE)</h3>
-                <p><strong>City:</strong> ${office.city}</p>
-                <p><strong>Type:</strong> ${office.type}</p>
-                <p><strong>Signed Terms:</strong> <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}">${office.signedTerms ? 'Yes' : 'No'}</span></p>
-            `);
+        if (office.lat !== undefined && office.lng !== undefined && !isNaN(office.lat) && !isNaN(office.lng)) {
+            const marker = L.marker([office.lat, office.lng])
+                .bindPopup(`
+                    <h3>${company.name} (OFFICE)</h3>
+                    <p><strong>City:</strong> ${office.city}</p>
+                    <p><strong>Type:</strong> ${office.type}</p>
+                    <p><strong>Signed Terms:</strong> <span style="color:${office.signedTerms ? '#2ecc71' : '#ff4d4d'}">${office.signedTerms ? 'Yes' : 'No'}</span></p>
+                `);
 
-        marker.addTo(map);
-        markers.push({ marker, company: company.name });
-        bounds.push([office.lat, office.lng]);
+            marker.addTo(map);
+            markers.push({ marker, company: company.name });
+            bounds.push([office.lat, office.lng]);
+        }
     });
 
     if (bounds.length > 0) {
@@ -303,7 +311,9 @@ function renderOfficeList(company) {
         `;
 
         card.addEventListener('click', () => {
-            map.setView([office.lat, office.lng], 12);
+            if (office.lat && office.lng) {
+                map.setView([office.lat, office.lng], 12);
+            }
         });
 
         officeList.appendChild(card);
@@ -341,9 +351,12 @@ function updateSummaryBox(company) {
             <h4>Global Reach</h4>
             <p>${countries} Found</p>
         </div>
-        <div class="stat-item">
+         <div class="stat-item">
             <h4>Signed Terms</h4>
-            <p>${signedStatusHTML}</p>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <p>${signedStatusHTML}</p>
+                <small style="color:var(--text-secondary); font-size:0.75rem;">${company.signedTermsPercentage ? 'Target: ' + company.signedTermsPercentage : ''}</small>
+            </div>
         </div>
     `;
 
