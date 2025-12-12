@@ -181,8 +181,10 @@ function renderList(data) {
         const card = document.createElement('div');
         card.className = 'company-card';
 
-        // Create tags for locations
-        const tags = company.offices.map(o => `<span class="card-tag">${o.city}</span>`).join('');
+        // 1. Get Unique Countries
+        const countries = [...new Set(company.offices.map(o => o.country))];
+        // 2. Create Tags
+        const tags = countries.map(c => `<span class="card-tag">${c}</span>`).join('');
 
         card.innerHTML = `
             <h3>${company.name}</h3>
@@ -207,7 +209,6 @@ function renderMap(data) {
         company.offices.forEach(office => {
             // Check for valid coords before creating marker
             if (office.lat === undefined || office.lng === undefined || isNaN(office.lat) || isNaN(office.lng)) {
-                console.warn(`Skipping invalid marker for ${company.name} in ${office.city}, ${office.country}`);
                 return;
             }
 
@@ -218,6 +219,14 @@ function renderMap(data) {
                     <p><strong>Location:</strong> ${office.city}, ${office.country}</p>
                     <p><strong>Type:</strong> ${office.type}</p>
                 `);
+
+            // Hover interactions
+            marker.on('mouseover', function (e) {
+                this.openPopup();
+            });
+            marker.on('mouseout', function (e) {
+                this.closePopup();
+            });
 
             // Add click listener to marker
             marker.on('click', () => {
