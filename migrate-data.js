@@ -4,167 +4,110 @@
 const migrateData = async (manualCsvText) => {
     console.log('Starting migration...');
 
-    // 1. Get Data (Fetch or Fallback)
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3ZCOzJZwtsXjYwTkXlhRv2PvLQ1wEY1-NkH1t4QQa_wFO-dmx6utjofne7HyDdq9VYSKLGrISbMjz/pub?output=csv';
     let csvText = manualCsvText;
 
     if (!csvText) {
         try {
             const response = await fetch(SHEET_URL);
-            if (response.ok) {
-                csvText = await response.text();
-            }
+            if (response.ok) csvText = await response.text();
         } catch (error) {
-            console.warn('Direct fetch failed (likely CORS). Checking for fallbacks...', error);
+            console.warn('CORS or Network error. Workaround available in help message.');
         }
     }
 
-    // Reuse existing parse/transform logic
-    const parseCSV = (csvText) => {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = [];
-        for (let i = 1; i < lines.length; i++) {
-            const currentLine = lines[i].split(',');
-            if (currentLine.length === headers.length) {
-                const row = {};
-                for (let j = 0; j < headers.length; j++) {
-                    row[headers[j]] = currentLine[j].trim();
-                }
-                data.push(row);
-            }
-        }
-        return data;
-    };
-
-    // Country Center Coordinates (Approximate)
     const COUNTRY_COORDINATES = {
-        'USA': { lat: 37.0902, lng: -95.7129 },
-        'United States': { lat: 37.0902, lng: -95.7129 }, // Alias
-        'US': { lat: 37.0902, lng: -95.7129 }, // Alias
-        'UK': { lat: 55.3781, lng: -3.4360 },
-        'United Kingdom': { lat: 55.3781, lng: -3.4360 }, // Alias
-        'Great Britain': { lat: 55.3781, lng: -3.4360 }, // Alias
-        'Singapore': { lat: 1.3521, lng: 103.8198 },
-        'India': { lat: 20.5937, lng: 78.9629 },
-        'Japan': { lat: 36.2048, lng: 138.2529 },
-        'South Korea': { lat: 35.9078, lng: 127.7669 },
-        'Korea': { lat: 35.9078, lng: 127.7669 },
-        'Ireland': { lat: 53.1424, lng: -7.6921 },
-        'Netherlands': { lat: 52.1326, lng: 5.2913 },
-        'The Netherlands': { lat: 52.1326, lng: 5.2913 }, // Alias
-        'Israel': { lat: 31.0461, lng: 34.8516 },
         'Canada': { lat: 56.1304, lng: -106.3468 },
-        'France': { lat: 46.2276, lng: 2.2137 },
-        'Poland': { lat: 51.9194, lng: 19.1451 },
-        'Australia': { lat: -25.2744, lng: 133.7751 },
-        'Philippines': { lat: 12.8797, lng: 121.7740 },
-        'New Zealand': { lat: -40.9006, lng: 174.8860 },
-        'Malaysia': { lat: 4.2105, lng: 101.9758 },
-        'China': { lat: 35.8617, lng: 104.1954 },
-        'Germany': { lat: 51.1657, lng: 10.4515 },
-        'Brazil': { lat: -14.2350, lng: -51.9253 },
-        'Mexico': { lat: 23.6345, lng: -102.5528 },
+        'USA': { lat: 37.0902, lng: -95.7129 },
+        'United States': { lat: 37.0902, lng: -95.7129 },
+        'US': { lat: 37.0902, lng: -95.7129 },
         'Spain': { lat: 40.4637, lng: -3.7492 },
+        'Ireland': { lat: 53.1424, lng: -7.6921 },
+        'UK': { lat: 55.3781, lng: -3.4360 },
+        'United Kingdom': { lat: 55.3781, lng: -3.4360 },
+        'France': { lat: 46.2276, lng: 2.2137 },
+        'Germany': { lat: 51.1657, lng: 10.4515 },
+        'Poland': { lat: 51.9194, lng: 19.1451 },
         'Italy': { lat: 41.8719, lng: 12.5674 },
         'Greece': { lat: 39.0742, lng: 21.8243 },
+        'Netherlands': { lat: 52.1326, lng: 5.2913 },
         'Belgium': { lat: 50.5039, lng: 4.4699 },
         'Denmark': { lat: 56.2639, lng: 9.5018 },
         'Sweden': { lat: 60.1282, lng: 18.6435 },
         'Norway': { lat: 60.4720, lng: 8.4689 },
         'Finland': { lat: 61.9241, lng: 25.7482 },
-        'Hong Kong': { lat: 22.3193, lng: 114.1694 }
+        'Hong Kong': { lat: 22.3193, lng: 114.1694 },
+        'Australia': { lat: -25.2744, lng: 133.7751 },
+        'Singapore': { lat: 1.3521, lng: 103.8198 },
+        'India': { lat: 20.5937, lng: 78.9629 },
+        'Japan': { lat: 36.2048, lng: 138.2529 }
     };
 
     const getJitteredCoords = (country) => {
         const center = COUNTRY_COORDINATES[country];
-
         if (!center) {
-            console.warn(`WARNING: Country "${country}" not found in coordinate dictionary. Markers will default to 0,0.`);
+            console.warn(`WARNING: Country "${country}" not found. Defaulting to 0,0.`);
             return { lat: 0, lng: 0 };
         }
-
-        // Jitter by +/- 2-5 degrees to spread them out
-        const jitterLat = (Math.random() - 0.5) * 4;
-        const jitterLng = (Math.random() - 0.5) * 4;
         return {
-            lat: center.lat + jitterLat,
-            lng: center.lng + jitterLng
+            lat: center.lat + (Math.random() - 0.5) * 4,
+            lng: center.lng + (Math.random() - 0.5) * 4
         };
     };
 
-    const transformData = (flatData) => {
-        const companyMap = new Map();
-        flatData.forEach(row => {
-            if (!row.Name) return;
-            if (!companyMap.has(row.Name)) {
-                companyMap.set(row.Name, {
-                    id: row.Name,
-                    name: row.Name,
-                    industry: row.Industry || 'Technology',
-                    description: row.Description || 'No description available.',
-                    offices: [],
-                    signedTermsPercentage: row['Signed Terms Percentage'] || 'N/A' // New Field
-                });
-            }
-
-            // Generate Coords based on Country
-            const country = row.Country || 'Unknown';
-            const coords = getJitteredCoords(country);
-
-            const company = companyMap.get(row.Name);
-            company.offices.push({
-                city: row.City || 'Unknown City', // Still keeping city name for display if available
-                country: country,
-                lat: coords.lat,
-                lng: coords.lng, // Generated
-                type: row.Type || 'Office',
-                signedTerms: row['Signed Terms'] ? row['Signed Terms'].trim().toLowerCase() === 'yes' : false,
-                signedTermsPercentage: row['Signed Terms Percentage'] || 'N/A'
-            });
-
-            // Update company-level fields if present in any row
-            if (row.Website) company.website = row.Website;
-            if (row.LinkedIn) company.linkedin = row.LinkedIn;
+    const parseCSV = (text) => {
+        const lines = text.split('\n').filter(l => l.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        return lines.slice(1).map(line => {
+            const values = line.split(',');
+            const row = {};
+            headers.forEach((h, i) => row[h] = values[i] ? values[i].trim() : '');
+            return row;
         });
-        return Array.from(companyMap.values());
     };
 
-    let companies = [];
-
-    if (csvText) {
-        console.log('Using CSV data...');
-        const flatData = parseCSV(csvText);
-        companies = transformData(flatData);
-    } else if (window.companies && window.companies.length > 0) {
-        console.log('Using local fallback data (data.js)...');
-        companies = window.companies;
-    } else {
-        console.error('No data found. Please provide CSV text manually.');
-        alert('Migration Failed: Could not fetch data. \n\nWorkaround: \n1. Open the Google Sheet CSV URL in a new tab. \n2. Copy all text. \n3. Run: window.migrateData(`PASTE_TEXT_HERE`)');
+    if (!csvText) {
+        console.error('No data found.');
         return;
     }
 
-    console.log(`Ready to upload ${companies.length} companies.`);
+    const flatData = parseCSV(csvText);
+    const companyMap = new Map();
 
-    // 2. Upload to Firestore
-    try {
-        const batch = db.batch();
-
-        companies.forEach(company => {
-            const docRef = db.collection('companies').doc(company.name); // Use name as ID
-            batch.set(docRef, company);
+    flatData.forEach(row => {
+        if (!row.Name) return;
+        if (!companyMap.has(row.Name)) {
+            companyMap.set(row.Name, {
+                id: row.Name,
+                name: row.Name,
+                industry: row.Industry || 'Technology',
+                description: row.Description || 'No description.',
+                website: row.Website || '',
+                linkedin: row.LinkedIn || '',
+                offices: []
+            });
+        }
+        const coords = getJitteredCoords(row.Country || 'Unknown');
+        companyMap.get(row.Name).offices.push({
+            city: row.City || '',
+            country: row.Country || 'Unknown',
+            lat: coords.lat,
+            lng: coords.lng,
+            type: row.Type || 'Office',
+            signedTerms: row['Signed Terms'] ? row['Signed Terms'].toLowerCase() === 'yes' : false,
+            signedTermsPercentage: row['Signed Terms Percentage'] || 'N/A'
         });
+    });
 
-        await batch.commit();
-        console.log('Migration complete! Data uploaded to Firestore.');
-        alert('Migration complete! Refresh the page to see data from Firestore.');
-    } catch (error) {
-        console.error('Firestore upload failed:', error);
-        alert('Upload failed. Check console for details.');
-    }
+    const companies = Array.from(companyMap.values());
+    console.log(`Uploading ${companies.length} companies...`);
+
+    const batch = db.batch();
+    companies.forEach(c => batch.set(db.collection('companies').doc(c.name), c));
+    await batch.commit();
+    console.log('Migration Complete.');
+    alert('Migration complete! Refresh to see the latest map.');
 };
 
-// Expose to window so user can call it
 window.migrateData = migrateData;
-console.log('Migration script loaded. Run window.migrateData() in console to start.');
+console.log('Migration script ready. Run window.migrateData() in console.');
