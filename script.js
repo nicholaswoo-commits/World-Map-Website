@@ -282,12 +282,13 @@ summaryCompanySelect.addEventListener('change', (e) => {
 closeSummaryBtn.addEventListener('click', () => summaryBox.classList.add('hidden'));
 
 function renderTable(data) {
-    dataTableBody.innerHTML = '';
+    let htmlContent = '';
     data.forEach(company => {
         company.offices.forEach(o => {
-            dataTableBody.innerHTML += `<tr><td>${company.name}</td><td>${company.industry}</td><td>${o.city || ''}</td><td>${o.country}</td><td>${o.type}</td></tr>`;
+            htmlContent += `<tr><td>${company.name}</td><td>${company.industry}</td><td>${o.city || ''}</td><td>${o.country}</td><td>${o.type}</td></tr>`;
         });
     });
+    dataTableBody.innerHTML = htmlContent;
 }
 
 function filterData() {
