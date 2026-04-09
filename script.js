@@ -7,6 +7,7 @@ let currentMode = 'ALL';
 let currentCompany = null;
 let currentPage = 1;
 const itemsPerPage = 50;
+let filteredCompanies = []; // Tracks the currently filtered dataset
 
 // DOM Elements
 const loginOverlay = document.getElementById('login-overlay');
@@ -22,6 +23,7 @@ const searchInput = document.getElementById('search-input');
 const companyFilter = document.getElementById('company-filter');
 const cityFilter = document.getElementById('city-filter');
 const viewDataBtn = document.getElementById('view-data-btn');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 const dataModal = document.getElementById('data-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const logoutBtn = document.getElementById('logout-btn');
@@ -77,6 +79,7 @@ async function initApp() {
     try {
         const snapshot = await db.collection('companies').get();
         companies = snapshot.docs.map(doc => doc.data());
+        filteredCompanies = companies;
         window.companies = companies;
         populateDropdowns();
         renderApp(companies);
@@ -317,6 +320,7 @@ function filterData() {
         }
         return mTxt && mSelC && mSelL;
     });
+    filteredCompanies = filtered; // Update Global Array
     renderApp(filtered);
 }
 
@@ -330,3 +334,29 @@ cityFilter.addEventListener('change', filterData);
 viewDataBtn.addEventListener('click', () => dataModal.classList.remove('hidden'));
 closeModalBtn.addEventListener('click', () => dataModal.classList.add('hidden'));
 window.addEventListener('click', (e) => { if (e.target === dataModal) dataModal.classList.add('hidden'); });
+
+exportCsvBtn.addEventListener('click', () => {
+    let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Signed Terms Percentage\\n";
+    filteredCompanies.forEach(company => {
+        company.offices.forEach(office => {
+            const cleanName = (company.name || '').replace(/"/g, '""');
+            const cleanInd = (company.industry || '').replace(/"/g, '""');
+            const cleanWeb = (company.website || '').replace(/"/g, '""');
+            const cleanCity = (office.city || '').replace(/"/g, '""');
+            const cleanCountry = (office.country || '').replace(/"/g, '""');
+            const cleanType = (office.type || '').replace(/"/g, '""');
+            const signed = office.signedTerms ? 'Yes' : 'No';
+            const pct = office.signedTermsPercentage || '';
+            csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\\n`;
+        });
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "companies_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
