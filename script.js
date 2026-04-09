@@ -1,5 +1,6 @@
 // Global Variables
 let map;
+let markerCluster;
 let markers = [];
 let companies = []; // Will store data from Firestore
 let currentMode = 'ALL'; 
@@ -69,6 +70,8 @@ async function initApp() {
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
         }).addTo(map);
+        markerCluster = L.markerClusterGroup();
+        map.addLayer(markerCluster);
     }
 
     try {
@@ -170,7 +173,7 @@ function renderList(data) {
 }
 
 function renderMap(data) {
-    markers.forEach(m => map.removeLayer(m.marker));
+    if (markerCluster) markerCluster.clearLayers();
     markers = [];
     data.forEach(company => {
         company.offices.forEach(office => {
@@ -179,7 +182,7 @@ function renderMap(data) {
             marker.on('mouseover', () => marker.openPopup());
             marker.on('mouseout', () => marker.closePopup());
             marker.on('click', () => enterCompanyMode(company));
-            marker.addTo(map);
+            markerCluster.addLayer(marker);
             markers.push({ marker, company: company.name });
         });
     });
@@ -188,7 +191,7 @@ function renderMap(data) {
 function enterCompanyMode(company) {
     currentMode = 'SINGLE';
     currentCompany = company;
-    markers.forEach(m => map.removeLayer(m.marker));
+    if (markerCluster) markerCluster.clearLayers();
     markers = [];
     const bounds = [];
     company.offices.forEach(office => {
@@ -196,7 +199,7 @@ function enterCompanyMode(company) {
         const marker = L.marker([office.lat, office.lng]).bindPopup(`<h3>${company.name}</h3><p>${office.country}</p>`);
         marker.on('mouseover', () => marker.openPopup());
         marker.on('mouseout', () => marker.closePopup());
-        marker.addTo(map);
+        markerCluster.addLayer(marker);
         markers.push({ marker, company: company.name });
         bounds.push([office.lat, office.lng]);
     });
@@ -308,7 +311,11 @@ function filterData() {
     renderApp(filtered);
 }
 
-searchInput.addEventListener('input', filterData);
+let debounceTimer;
+searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(filterData, 300);
+});
 companyFilter.addEventListener('change', filterData);
 cityFilter.addEventListener('change', filterData);
 viewDataBtn.addEventListener('click', () => dataModal.classList.remove('hidden'));
