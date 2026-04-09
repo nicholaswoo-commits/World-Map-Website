@@ -4,6 +4,7 @@ let markers = [];
 let companies = []; // Will store data from Firestore
 let currentMode = 'ALL'; 
 let currentCompany = null;
+let currentDisplayLimit = 50; // Pagination limit
 
 // DOM Elements
 const loginOverlay = document.getElementById('login-overlay');
@@ -107,7 +108,9 @@ function renderApp(data) {
 
 function renderList(data) {
     companyList.innerHTML = '';
-    data.forEach(company => {
+    const dataToRender = data.slice(0, currentDisplayLimit);
+
+    dataToRender.forEach(company => {
         const card = document.createElement('div');
         card.className = 'company-card';
         const countries = [...new Set(company.offices.map(o => o.country))];
@@ -116,6 +119,25 @@ function renderList(data) {
         card.addEventListener('click', () => enterCompanyMode(company));
         companyList.appendChild(card);
     });
+
+    if (data.length > currentDisplayLimit) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'form-group button'; // Using existing styles where possible, fallback to inline
+        loadMoreBtn.style.width = '100%';
+        loadMoreBtn.style.marginTop = '1rem';
+        loadMoreBtn.style.background = 'var(--primary)';
+        loadMoreBtn.style.color = '#fff';
+        loadMoreBtn.style.border = 'none';
+        loadMoreBtn.style.padding = '10px';
+        loadMoreBtn.style.borderRadius = '5px';
+        loadMoreBtn.style.cursor = 'pointer';
+        loadMoreBtn.textContent = `Load More (${data.length - currentDisplayLimit} remaining)`;
+        loadMoreBtn.addEventListener('click', () => {
+            currentDisplayLimit += 50;
+            renderList(data);
+        });
+        companyList.appendChild(loadMoreBtn);
+    }
 }
 
 function renderMap(data) {
@@ -238,6 +260,8 @@ function renderTable(data) {
 
 function filterData() {
     if (currentMode !== 'ALL') return;
+    currentDisplayLimit = 50; // Reset on new filter
+    
     const txt = searchInput.value.toLowerCase();
     const selC = companyFilter.value;
     const selL = cityFilter.value;
