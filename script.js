@@ -87,19 +87,22 @@ async function initApp() {
 
 function populateDropdowns() {
     const uniqueCompanies = [...new Set(companies.map(c => c.name))].sort();
-    companyFilter.innerHTML = '<option value="">All Companies</option>';
-    summaryCompanySelect.innerHTML = '<option value="">Switch Company...</option>';
+    let companyHtml = '<option value="">All Companies</option>';
+    let switchHtml = '<option value="">Switch Company...</option>';
     uniqueCompanies.forEach(name => {
         const opt = `<option value="${name}">${name}</option>`;
-        companyFilter.innerHTML += opt;
-        summaryCompanySelect.innerHTML += opt;
+        companyHtml += opt;
+        switchHtml += opt;
     });
+    companyFilter.innerHTML = companyHtml;
+    summaryCompanySelect.innerHTML = switchHtml;
 
     const countries = [...new Set(companies.flatMap(c => c.offices.map(o => o.country)))].sort();
-    cityFilter.innerHTML = '<option value="">All Regions</option>';
+    let cityHtml = '<option value="">All Regions</option>';
     countries.forEach(c => {
-        cityFilter.innerHTML += `<option value="country:${c}">${c}</option>`;
+        cityHtml += `<option value="country:${c}">${c}</option>`;
     });
+    cityFilter.innerHTML = cityHtml;
 }
 
 function renderApp(data) {
@@ -283,11 +286,16 @@ closeSummaryBtn.addEventListener('click', () => summaryBox.classList.add('hidden
 
 function renderTable(data) {
     let htmlContent = '';
-    data.forEach(company => {
-        company.offices.forEach(o => {
-            htmlContent += `<tr><td>${company.name}</td><td>${company.industry}</td><td>${o.city || ''}</td><td>${o.country}</td><td>${o.type}</td></tr>`;
+    // Cap table rendering at 200 companies to prevent DOM freezing during initial load
+    const limit = Math.min(data.length, 200);
+    for (let i = 0; i < limit; i++) {
+        data[i].offices.forEach(o => {
+            htmlContent += `<tr><td>${data[i].name}</td><td>${data[i].industry}</td><td>${o.city || ''}</td><td>${o.country}</td><td>${o.type}</td></tr>`;
         });
-    });
+    }
+    if (data.length > 200) {
+        htmlContent += `<tr><td colspan="5" style="text-align:center; padding: 20px; color:var(--text-secondary);">Showing first 200 of ${data.length} companies. Use search to filter full dataset.</td></tr>`;
+    }
     dataTableBody.innerHTML = htmlContent;
 }
 
