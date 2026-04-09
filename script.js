@@ -4,7 +4,8 @@ let markers = [];
 let companies = []; // Will store data from Firestore
 let currentMode = 'ALL'; 
 let currentCompany = null;
-let currentDisplayLimit = 50; // Pagination limit
+let currentPage = 1;
+const itemsPerPage = 50;
 
 // DOM Elements
 const loginOverlay = document.getElementById('login-overlay');
@@ -108,7 +109,11 @@ function renderApp(data) {
 
 function renderList(data) {
     companyList.innerHTML = '';
-    const dataToRender = data.slice(0, currentDisplayLimit);
+    
+    // Calculate slices
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const dataToRender = data.slice(startIndex, endIndex);
 
     dataToRender.forEach(company => {
         const card = document.createElement('div');
@@ -120,23 +125,47 @@ function renderList(data) {
         companyList.appendChild(card);
     });
 
-    if (data.length > currentDisplayLimit) {
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'form-group button'; // Using existing styles where possible, fallback to inline
-        loadMoreBtn.style.width = '100%';
-        loadMoreBtn.style.marginTop = '1rem';
-        loadMoreBtn.style.background = 'var(--primary)';
-        loadMoreBtn.style.color = '#fff';
-        loadMoreBtn.style.border = 'none';
-        loadMoreBtn.style.padding = '10px';
-        loadMoreBtn.style.borderRadius = '5px';
-        loadMoreBtn.style.cursor = 'pointer';
-        loadMoreBtn.textContent = `Load More (${data.length - currentDisplayLimit} remaining)`;
-        loadMoreBtn.addEventListener('click', () => {
-            currentDisplayLimit += 50;
-            renderList(data);
+    // Pagination controls
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    if (totalPages > 1) {
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination-controls';
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'btn-primary';
+        prevBtn.textContent = 'Prev';
+        prevBtn.disabled = currentPage === 1;
+        if (currentPage === 1) prevBtn.style.opacity = '0.5';
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderList(data);
+                companyList.scrollTop = 0;
+            }
         });
-        companyList.appendChild(loadMoreBtn);
+
+        const pageInfo = document.createElement('span');
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        pageInfo.style.color = 'var(--text-secondary)';
+        pageInfo.style.fontSize = '0.85rem';
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn-primary';
+        nextBtn.textContent = 'Next';
+        nextBtn.disabled = currentPage === totalPages;
+        if (currentPage === totalPages) nextBtn.style.opacity = '0.5';
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderList(data);
+                companyList.scrollTop = 0;
+            }
+        });
+
+        paginationContainer.appendChild(prevBtn);
+        paginationContainer.appendChild(pageInfo);
+        paginationContainer.appendChild(nextBtn);
+        companyList.appendChild(paginationContainer);
     }
 }
 
@@ -260,7 +289,7 @@ function renderTable(data) {
 
 function filterData() {
     if (currentMode !== 'ALL') return;
-    currentDisplayLimit = 50; // Reset on new filter
+    currentPage = 1; // Reset to page 1 on new filter
     
     const txt = searchInput.value.toLowerCase();
     const selC = companyFilter.value;

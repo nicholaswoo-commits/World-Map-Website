@@ -444,6 +444,16 @@ body {
     box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
 }
 
+/* --- Pagination --- */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
 /* --- Modal --- */
 .modal {
     position: fixed;
