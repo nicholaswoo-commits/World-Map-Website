@@ -336,7 +336,7 @@ closeModalBtn.addEventListener('click', () => dataModal.classList.add('hidden'))
 window.addEventListener('click', (e) => { if (e.target === dataModal) dataModal.classList.add('hidden'); });
 
 exportCsvBtn.addEventListener('click', () => {
-    let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Signed Terms Percentage\\n";
+    let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Signed Terms Percentage\n";
     filteredCompanies.forEach(company => {
         company.offices.forEach(office => {
             const cleanName = (company.name || '').replace(/"/g, '""');
@@ -347,7 +347,7 @@ exportCsvBtn.addEventListener('click', () => {
             const cleanType = (office.type || '').replace(/"/g, '""');
             const signed = office.signedTerms ? 'Yes' : 'No';
             const pct = office.signedTermsPercentage || '';
-            csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\\n`;
+            csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\n`;
         });
     });
     
