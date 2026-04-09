@@ -337,17 +337,43 @@ window.addEventListener('click', (e) => { if (e.target === dataModal) dataModal.
 
 exportCsvBtn.addEventListener('click', () => {
     let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Signed Terms Percentage\n";
+    
+    const txt = searchInput.value.toLowerCase();
+    const selL = cityFilter.value;
+
     filteredCompanies.forEach(company => {
         company.offices.forEach(office => {
-            const cleanName = (company.name || '').replace(/"/g, '""');
-            const cleanInd = (company.industry || '').replace(/"/g, '""');
-            const cleanWeb = (company.website || '').replace(/"/g, '""');
-            const cleanCity = (office.city || '').replace(/"/g, '""');
-            const cleanCountry = (office.country || '').replace(/"/g, '""');
-            const cleanType = (office.type || '').replace(/"/g, '""');
-            const signed = office.signedTerms ? 'Yes' : 'No';
-            const pct = office.signedTermsPercentage || '';
-            csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\n`;
+            // Apply granular office-level filtering
+            let includeOffice = true;
+            
+            // Filter out offices that don't match the selected region
+            if (selL) {
+                const targetCountry = selL.replace('country:', '');
+                if (office.country !== targetCountry) {
+                    includeOffice = false;
+                }
+            }
+            
+            // Filter out offices that don't match the text search (if it doesn't match the company name either)
+            if (txt && includeOffice) {
+                const matchesName = company.name.toLowerCase().includes(txt);
+                const matchesCountry = office.country.toLowerCase().includes(txt);
+                if (!matchesName && !matchesCountry) {
+                    includeOffice = false;
+                }
+            }
+
+            if (includeOffice) {
+                const cleanName = (company.name || '').replace(/"/g, '""');
+                const cleanInd = (company.industry || '').replace(/"/g, '""');
+                const cleanWeb = (company.website || '').replace(/"/g, '""');
+                const cleanCity = (office.city || '').replace(/"/g, '""');
+                const cleanCountry = (office.country || '').replace(/"/g, '""');
+                const cleanType = (office.type || '').replace(/"/g, '""');
+                const signed = office.signedTerms ? 'Yes' : 'No';
+                const pct = office.signedTermsPercentage || '';
+                csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\n`;
+            }
         });
     });
     
