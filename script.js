@@ -41,16 +41,22 @@ const summaryWebsite = document.getElementById('summary-website');
 const summaryLinkedin = document.getElementById('summary-linkedin');
 
 // --- Firebase Authentication ---
-auth.onAuthStateChanged(user => {
-    if (user) {
-        loginOverlay.classList.add('hidden');
-        appDiv.classList.remove('hidden');
-        initApp();
-    } else {
-        loginOverlay.classList.remove('hidden');
-        appDiv.classList.add('hidden');
-    }
-});
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(() => {
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginOverlay.classList.add('hidden');
+                appDiv.classList.remove('hidden');
+                initApp();
+            } else {
+                loginOverlay.classList.remove('hidden');
+                appDiv.classList.add('hidden');
+            }
+        });
+    })
+    .catch((error) => {
+        console.error("Auth persistence error:", error);
+    });
 
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -58,15 +64,10 @@ loginForm.addEventListener('submit', (e) => {
     const password = document.getElementById('password').value;
     loginError.textContent = '';
     
-    // Enforce login every time the browser/tab is closed
-    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-        .then(() => {
-            return auth.signInWithEmailAndPassword(email, password);
-        })
-        .catch(err => {
-            loginError.textContent = 'Invalid credentials.';
-            console.error(err);
-        });
+    auth.signInWithEmailAndPassword(email, password).catch(err => {
+        loginError.textContent = 'Invalid credentials.';
+        console.error(err);
+    });
 });
 
 logoutBtn.addEventListener('click', () => auth.signOut());
