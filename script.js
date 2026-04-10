@@ -57,9 +57,16 @@ loginForm.addEventListener('submit', (e) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     loginError.textContent = '';
-    auth.signInWithEmailAndPassword(email, password).catch(err => {
-        loginError.textContent = 'Invalid credentials.';
-    });
+    
+    // Enforce login every time the browser/tab is closed
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(() => {
+            return auth.signInWithEmailAndPassword(email, password);
+        })
+        .catch(err => {
+            loginError.textContent = 'Invalid credentials.';
+            console.error(err);
+        });
 });
 
 logoutBtn.addEventListener('click', () => auth.signOut());
