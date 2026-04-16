@@ -135,8 +135,11 @@ function renderList(data) {
     dataToRender.forEach(company => {
         const card = document.createElement('div');
         card.className = 'company-card';
-        const countries = [...new Set(company.offices.map(o => o.country))];
-        const tags = countries.map(c => `<span class="card-tag">${c}</span>`).join('');
+        
+        // Tags should display ALL countries where the company has offices
+        const allCountries = [...new Set(company.offices.map(o => o.country))].sort();
+        const tags = allCountries.map(c => `<span class="card-tag">${c}</span>`).join('');
+        
         card.innerHTML = `<h3>${company.name}</h3><p>${company.industry}</p><div style="margin-top:0.5rem;">${tags}</div>`;
         card.addEventListener('click', () => enterCompanyMode(company));
         companyList.appendChild(card);
@@ -265,25 +268,27 @@ function updateSummaryBox(company) {
     summaryDesc.textContent = company.description || "No description.";
     summaryCompanySelect.value = company.name;
 
-    const breakdown = company.offices.map(o => {
-        const displayPercentage = o.signedTerms ? (o.signedTermsPercentage && o.signedTermsPercentage !== 'N/A' ? o.signedTermsPercentage : '100%') : '0%';
-        const numericPct = parseInt(displayPercentage) || 0;
-        const color = o.signedTerms ? '#00f0ff' : '#ff4d4d';
-        return `
-            <div style="margin-bottom:8px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:2px;">
-                    <span style="color:var(--text-secondary);">${o.country}</span>
-                    <span style="color:${color}; font-weight:600;">${displayPercentage}</span>
-                </div>
-                <div style="height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;">
-                    <div style="width:${numericPct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}44;"></div>
-                </div>
-            </div>`;
-    }).join('');
+    // Aggregate Signed Terms Data
+    const signedOffices = company.offices.filter(o => o.signedTerms);
+    const signedCountries = [...new Set(signedOffices.map(o => o.country))].sort();
+    
+    // Determine the percentage to display
+    // If the HQ has a percentage, use that, otherwise calculate aggregate
+    const hq = company.offices.find(o => o.type === 'HQ') || company.offices[0];
+    const displayPercentage = hq && hq.signedTermsPercentage && hq.signedTermsPercentage !== 'N/A' 
+        ? hq.signedTermsPercentage 
+        : (company.offices.length > 0 ? Math.round((signedOffices.length / company.offices.length) * 100) + '%' : '0%');
+
+    const signedLine = signedCountries.length > 0 
+        ? `<span style="color:#00f0ff; font-weight:600;">${displayPercentage}</span> <span style="color:var(--text-secondary); font-size:0.75rem;">(${signedCountries.join(', ')})</span>`
+        : `<span style="color:#ff4d4d; font-weight:600;">0%</span>`;
 
     summaryStats.innerHTML = `
         <div class="stat-item"><h4>Offices</h4><p>${company.offices.length}</p></div>
-        <div class="stat-item" style="flex-grow:1;"><h4>Signed Terms Breakdown</h4><div style="display:flex; flex-direction:column; width:100%; gap:2px; margin-top:4px;">${breakdown}</div></div>
+        <div class="stat-item" style="flex-grow:1;">
+            <h4>Signed Terms</h4>
+            <div style="margin-top:4px; font-size:1rem;">${signedLine}</div>
+        </div>
     `;
 
     if (company.website) { summaryWebsite.href = company.website; summaryWebsite.classList.remove('hidden'); } else { summaryWebsite.classList.add('hidden'); }
