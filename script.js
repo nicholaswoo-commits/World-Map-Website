@@ -245,7 +245,10 @@ function renderOfficeList(company) {
         const card = document.createElement('div');
         card.className = 'company-card';
         card.style.borderColor = office.signedTerms ? '#00f0ff' : '#ff4d4d';
-        card.innerHTML = `<h3>${office.country}</h3><div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+        
+        const locationTitle = office.city ? `${office.city}, ${office.country}` : office.country;
+        
+        card.innerHTML = `<h3>${locationTitle}</h3><div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
             <span class="card-tag">${office.type}</span>
             <span style="color:${office.signedTerms ? '#00f0ff' : '#ff4d4d'}; font-weight:600; font-size:0.8rem;">
                 ${office.signedTerms ? 'Signed' : 'Not Signed'}
