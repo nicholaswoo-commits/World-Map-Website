@@ -243,20 +243,22 @@ function exitCompanyMode() {
 }
 
 function renderOfficeList(company) {
-    officeList.innerHTML = `<h3 style="margin-bottom:1rem; color:var(--text-secondary);">Offices for ${company.name}</h3>`;
+    officeList.innerHTML = <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Offices for </h3>;
     company.offices.forEach(office => {
         const card = document.createElement('div');
         card.className = 'company-card';
         card.style.borderColor = office.signedTerms ? '#00f0ff' : '#ff4d4d';
-        
-        const locationTitle = office.city ? `${office.city}, ${office.country}` : office.country;
-        
-        card.innerHTML = `<h3>${locationTitle}</h3><div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
-            <span class="card-tag">${office.type}</span>
-            <span style="color:${office.signedTerms ? '#00f0ff' : '#ff4d4d'}; font-weight:600; font-size:0.8rem;">
-                ${office.signedTerms ? 'Signed' : 'Not Signed'}
-            </span>
-        </div>`;
+        const locationTitle = office.city ? office.city + ', ' + office.country : office.country;
+        let extraHtml = '';
+        if (office.signedTerms) {
+            const tags = [
+                office.signedTermsPercentage && office.signedTermsPercentage !== 'N/A' ? '<span class="card-tag" style="background:rgba(0,240,255,0.1);">' + office.signedTermsPercentage + '</span>' : '',
+                office.paymentTerms ? '<span class="card-tag">Payment: ' + office.paymentTerms + '</span>' : '',
+                office.rebateTerms  ? '<span class="card-tag">Rebate: '  + office.rebateTerms  + '</span>' : ''
+            ].filter(Boolean).join('');
+            if (tags) extraHtml = '<div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:4px;">' + tags + '</div>';
+        }
+        card.innerHTML = '<h3>' + locationTitle + '</h3><div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;"><span class="card-tag">' + office.type + '</span><span style="color:' + (office.signedTerms ? '#00f0ff' : '#ff4d4d') + '; font-weight:600; font-size:0.8rem;">' + (office.signedTerms ? 'Signed' : 'Not Signed') + '</span></div>' + extraHtml;
         card.addEventListener('click', () => { if (office.lat) map.setView([office.lat, office.lng], 5); });
         officeList.appendChild(card);
     });
@@ -283,9 +285,7 @@ function updateSummaryBox(company) {
         ? `<span style="color:#00f0ff; font-weight:600;">${displayPercentage}</span> <span style="color:var(--text-secondary); font-size:0.75rem;">(${signedCountries.join(', ')})</span>`
         : `<span style="color:#ff4d4d; font-weight:600;">0%</span>`;
 
-    summaryStats.innerHTML = `
-        <div class="stat-item"><h4>Offices</h4><p>${company.offices.length}</p></div>
-        <div class="stat-item" style="flex-grow:1;">
+    let statsHtml = '<div class="stat-item"><h4>Offices</h4><p>' + company.offices.length + '</p></div>'; statsHtml += '<div class="stat-item" style="flex-grow:1;"><h4>Signed Terms</h4><div style="margin-top:4px; font-size:1rem;">' + signedLine + '</div></div>'; const hqOffice = company.offices.find(o => o.type === 'HQ') || signedOffices[0] || company.offices[0]; if (hqOffice && hqOffice.paymentTerms) statsHtml += '<div class="stat-item"><h4>Payment Terms</h4><p>' + hqOffice.paymentTerms + '</p></div>'; if (hqOffice && hqOffice.rebateTerms) statsHtml += '<div class="stat-item"><h4>Rebate Terms</h4><p>' + hqOffice.rebateTerms + '</p></div>'; summaryStats.innerHTML = statsHtml;>
             <h4>Signed Terms</h4>
             <div style="margin-top:4px; font-size:1rem;">${signedLine}</div>
         </div>
@@ -352,7 +352,7 @@ closeModalBtn.addEventListener('click', () => dataModal.classList.add('hidden'))
 window.addEventListener('click', (e) => { if (e.target === dataModal) dataModal.classList.add('hidden'); });
 
 exportCsvBtn.addEventListener('click', () => {
-    let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Signed Terms Percentage\n";
+    let csvContent = "Company,Industry,Website,City,Country,Office Type,Signed Terms,Terms Percentage,Payment Terms,Rebate Terms\n";
     
     const txt = searchInput.value.toLowerCase();
     const selL = cityFilter.value;
@@ -380,25 +380,5 @@ exportCsvBtn.addEventListener('click', () => {
             }
 
             if (includeOffice) {
-                const cleanName = (company.name || '').replace(/"/g, '""');
-                const cleanInd = (company.industry || '').replace(/"/g, '""');
-                const cleanWeb = (company.website || '').replace(/"/g, '""');
-                const cleanCity = (office.city || '').replace(/"/g, '""');
-                const cleanCountry = (office.country || '').replace(/"/g, '""');
-                const cleanType = (office.type || '').replace(/"/g, '""');
-                const signed = office.signedTerms ? 'Yes' : 'No';
-                const pct = office.signedTermsPercentage || '';
-                csvContent += `"${cleanName}","${cleanInd}","${cleanWeb}","${cleanCity}","${cleanCountry}","${cleanType}","${signed}","${pct}"\n`;
-            }
-        });
-    });
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "companies_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
+                const q = s => '"'+(s||'').replace(/"/g,'""')+'"';
+                csvContent += [q(company.name),q(company.industry),q(company.website),q(office.city),q(office.country),q(office.type),office.signedTerms?'Yes':'No',q(office.signedTermsPercentage),q(office.paymentTerms),q(office.rebateTerms)].join(',')+'\n';
