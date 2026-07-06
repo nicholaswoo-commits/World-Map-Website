@@ -382,3 +382,16 @@ exportCsvBtn.addEventListener('click', () => {
             if (includeOffice) {
                 const q = s => '"'+(s||'').replace(/"/g,'""')+'"';
                 csvContent += [q(company.name),q(company.industry),q(company.website),q(office.city),q(office.country),q(office.type),office.signedTerms?'Yes':'No',q(office.signedTermsPercentage),q(office.paymentTerms),q(office.rebateTerms)].join(',')+'\n';
+            }
+        });
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "companies_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
