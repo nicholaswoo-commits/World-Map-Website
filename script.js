@@ -243,7 +243,7 @@ function exitCompanyMode() {
 }
 
 function renderOfficeList(company) {
-    officeList.innerHTML = <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Offices for </h3>;
+    officeList.innerHTML = `<h3 style="margin-bottom:1rem; color:var(--text-secondary);">Offices for ${company.name}</h3>`;
     company.offices.forEach(office => {
         const card = document.createElement('div');
         card.className = 'company-card';
@@ -274,8 +274,6 @@ function updateSummaryBox(company) {
     const signedOffices = company.offices.filter(o => o.signedTerms);
     const signedCountries = [...new Set(signedOffices.map(o => o.country))].sort();
     
-    // Determine the percentage to display
-    // If the HQ has a percentage, use that, otherwise calculate aggregate
     const hq = company.offices.find(o => o.type === 'HQ') || company.offices[0];
     const displayPercentage = hq && hq.signedTermsPercentage && hq.signedTermsPercentage !== 'N/A' 
         ? hq.signedTermsPercentage 
@@ -285,11 +283,14 @@ function updateSummaryBox(company) {
         ? `<span style="color:#00f0ff; font-weight:600;">${displayPercentage}</span> <span style="color:var(--text-secondary); font-size:0.75rem;">(${signedCountries.join(', ')})</span>`
         : `<span style="color:#ff4d4d; font-weight:600;">0%</span>`;
 
-    let statsHtml = '<div class="stat-item"><h4>Offices</h4><p>' + company.offices.length + '</p></div>'; statsHtml += '<div class="stat-item" style="flex-grow:1;"><h4>Signed Terms</h4><div style="margin-top:4px; font-size:1rem;">' + signedLine + '</div></div>'; const hqOffice = company.offices.find(o => o.type === 'HQ') || signedOffices[0] || company.offices[0]; if (hqOffice && hqOffice.paymentTerms) statsHtml += '<div class="stat-item"><h4>Payment Terms</h4><p>' + hqOffice.paymentTerms + '</p></div>'; if (hqOffice && hqOffice.rebateTerms) statsHtml += '<div class="stat-item"><h4>Rebate Terms</h4><p>' + hqOffice.rebateTerms + '</p></div>'; summaryStats.innerHTML = statsHtml;>
-            <h4>Signed Terms</h4>
-            <div style="margin-top:4px; font-size:1rem;">${signedLine}</div>
-        </div>
-    `;
+    const hqOffice = company.offices.find(o => o.type === 'HQ') || signedOffices[0] || company.offices[0];
+    const paymentTermsVal = hqOffice && hqOffice.paymentTerms ? hqOffice.paymentTerms : null;
+    const rebateTermsVal  = hqOffice && hqOffice.rebateTerms  ? hqOffice.rebateTerms  : null;
+    let statsHtml = '<div class="stat-item"><h4>Offices</h4><p>' + company.offices.length + '</p></div>';
+    statsHtml += '<div class="stat-item" style="flex-grow:1;"><h4>Signed Terms</h4><div style="margin-top:4px; font-size:1rem;">' + signedLine + '</div></div>';
+    if (paymentTermsVal) statsHtml += '<div class="stat-item"><h4>Payment Terms</h4><p>' + paymentTermsVal + '</p></div>';
+    if (rebateTermsVal)  statsHtml += '<div class="stat-item"><h4>Rebate Terms</h4><p>'  + rebateTermsVal  + '</p></div>';
+    summaryStats.innerHTML = statsHtml;
 
     if (company.website) { summaryWebsite.href = company.website; summaryWebsite.classList.remove('hidden'); } else { summaryWebsite.classList.add('hidden'); }
     if (company.linkedin) { summaryLinkedin.href = company.linkedin; summaryLinkedin.classList.remove('hidden'); } else { summaryLinkedin.classList.add('hidden'); }
@@ -299,7 +300,7 @@ function updateSummaryBox(company) {
 backToListBtn.addEventListener('click', exitCompanyMode);
 summaryCompanySelect.addEventListener('change', (e) => {
     const company = companies.find(c => c.name === e.target.value);
-    company ? enterCompanyMode(company) : exitCompanyMode();
+    if (company) enterCompanyMode(company); else exitCompanyMode();
 });
 closeSummaryBtn.addEventListener('click', () => summaryBox.classList.add('hidden'));
 
