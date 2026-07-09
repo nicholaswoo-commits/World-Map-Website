@@ -292,8 +292,8 @@ function updateSummaryBox(company) {
     if (rebateTermsVal)  statsHtml += '<div class="stat-item"><h4>Rebate Terms</h4><p>'  + rebateTermsVal  + '</p></div>';
     summaryStats.innerHTML = statsHtml;
 
-    if (company.website) { summaryWebsite.href = company.website; summaryWebsite.classList.remove('hidden'); } else { summaryWebsite.classList.add('hidden'); }
-    if (company.linkedin) { summaryLinkedin.href = company.linkedin; summaryLinkedin.classList.remove('hidden'); } else { summaryLinkedin.classList.add('hidden'); }
+    if (company.website) { summaryWebsite.href = company.website.startsWith('http') ? company.website : 'https://' + company.website; summaryWebsite.classList.remove('hidden'); } else { summaryWebsite.classList.add('hidden'); }
+    if (company.linkedin) { summaryLinkedin.href = company.linkedin.startsWith('http') ? company.linkedin : 'https://' + company.linkedin; summaryLinkedin.classList.remove('hidden'); } else { summaryLinkedin.classList.add('hidden'); }
     summaryBox.classList.remove('hidden');
 }
 
